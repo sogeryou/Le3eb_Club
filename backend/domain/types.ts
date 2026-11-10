@@ -82,7 +82,8 @@ export type PersistedState = {
     gameName: string;
     intro: string;
     hourlyRate: number;
-    status: 'PENDING' | 'APPROVED' | 'REJECTED';
+    status: 'PENDING' | 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+    rejectionReason?: string;
     availability: 'ONLINE' | 'OFFLINE' | 'BUSY';
     createdAt: number;
     updatedAt: number;

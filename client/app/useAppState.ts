@@ -6,7 +6,7 @@ import {
 import { GAMES } from '../constants';
 import { toEPal } from './companionDiscovery';
 const POSTS: import('@shared/types').Post[] = [];
-import { businessApi, type AuthUser, type CompanionRanking } from '../services/businessApi';
+import { businessApi, type AuthUser, type CompanionProfile, type CompanionRanking } from '../services/businessApi';
 import { useI18n } from '../i18n/I18nProvider';
 import { useDeviceId } from '../hooks/useDeviceId';
 import { type View, BUSINESS_TOKEN_KEY, BUSINESS_UI_AUTH_KEY } from '../router/routes';
@@ -385,6 +385,32 @@ export function useAppState() {
   const [userRole, setUserRole] = useState<'USER' | 'PLAYER'>('USER');
   const [isPlayerOnline, setIsPlayerOnline] = useState(true);
   const [playerApplicationStatus, setPlayerApplicationStatus] = useState<'NONE' | 'PENDING' | 'APPROVED' | 'REJECTED'>('NONE');
+  const [myCompanion, setMyCompanion] = useState<CompanionProfile | null>(null);
+  const [myCompanionError, setMyCompanionError] = useState(false);
+  const [myCompanionLoading, setMyCompanionLoading] = useState(false);
+  const [companionStatusRefresh, setCompanionStatusRefresh] = useState(0);
+  const recordCompanionApplication = useCallback((record: CompanionProfile | null) => {
+    setMyCompanion(record);
+    setPlayerApplicationStatus(record?.status === 'PENDING_REVIEW' ? 'PENDING' : record?.status ?? 'NONE');
+    if (record?.status === 'APPROVED') setUserRole('PLAYER');
+  }, []);
+  useEffect(() => {
+    let active = true;
+    setMyCompanionError(false);
+    if (!authToken) {
+      recordCompanionApplication(null);
+      setUserRole('USER');
+      setMyCompanionLoading(false);
+      return;
+    }
+    if (authUser?.role === 'PLAYER') setUserRole('PLAYER');
+    setMyCompanionLoading(true);
+    businessApi.getMyCompanion(authToken)
+      .then(record => { if (active) recordCompanionApplication(record); })
+      .catch(() => { if (active) setMyCompanionError(true); })
+      .finally(() => { if (active) setMyCompanionLoading(false); });
+    return () => { active = false; };
+  }, [authToken, authUser?.role, currentView, companionStatusRefresh, recordCompanionApplication]);
   const [playerApplicationStep, setPlayerApplicationStep] = useState(1);
   const [playerApplicationData, setPlayerApplicationData] = useState({
     gameId: '',
@@ -668,6 +694,7 @@ export function useAppState() {
   const legendEPals = EPALS;
 
   const navigateTo = (view: View, data?: any) => {
+    if (view === 'HOME') void reloadDiscovery();
     const requiresAuth = viewRequiresAuth(view, data);
     if (requiresAuth && !isAuthenticatedRef.current) {
       pendingNavigationRef.current = { view, data };
@@ -867,6 +894,7 @@ export function useAppState() {
     userCoins, setUserCoins, userDiamonds, setUserDiamonds, withdrawAmount, setWithdrawAmount,
     withdrawAddress, setWithdrawAddress, withdrawSubmitting, setWithdrawSubmitting,
     userRole, setUserRole, isPlayerOnline, setIsPlayerOnline, playerApplicationStatus, setPlayerApplicationStatus,
+    myCompanion, myCompanionError, myCompanionLoading, recordCompanionApplication, setCompanionStatusRefresh,
     playerApplicationStep, setPlayerApplicationStep, playerApplicationData, setPlayerApplicationData,
     applyGameSearchQuery, setApplyGameSearchQuery, showApplySelectionModal, setShowApplySelectionModal,
     showGameSelectorModal, setShowGameSelectorModal, focusCommentInput, setFocusCommentInput, commentInputRef,

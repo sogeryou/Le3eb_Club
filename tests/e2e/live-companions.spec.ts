@@ -31,11 +31,15 @@ test('empty directory, approved real record and server-backed booking', async ({
   expect(application.status()).toBe(201);
   const { id } = await application.json();
   const admin = await login(adminEmail, adminPassword);
-  const review = (action: string) => request.post(`/api/admin/companions/${id}/review`, { headers: auth(admin), data: { action } });
+  const review = (action: string) => request.post(`/api/admin/companions/${id}/review`, { headers: auth(admin), data: { action, reason: action === 'REJECT' ? 'Local review test' : undefined } });
   expect((await review('REJECT')).ok()).toBeTruthy();
   expect((await request.get(`/api/companions/${id}`)).status()).toBe(404);
   await page.reload();
   await expect(page.getByText('لا يوجد رفقاء لعب هنا حالياً.')).toBeVisible();
+  const resubmit = await request.post('/api/companions/apply', {
+    headers: auth(playerToken), data: { gameName: 'PUBG Mobile', intro: 'Local acceptance account', hourlyRate: 7 },
+  });
+  expect(resubmit.ok()).toBeTruthy();
   expect((await review('APPROVE')).ok()).toBeTruthy();
 
   const buyer = await login('demo@le3eb.club', 'demo123');

@@ -42,10 +42,14 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
     }
     const existing = companions.find(c => c.userId === userId);
     if (existing) {
+      if (existing.status === 'APPROVED' && existing.gameName === gameName && existing.intro === intro && existing.hourlyRate === hourlyRate) {
+        return res.json(existing);
+      }
       existing.gameName = gameName;
       existing.intro = intro;
       existing.hourlyRate = hourlyRate;
-      existing.status = 'APPROVED';
+      existing.status = 'PENDING_REVIEW';
+      delete existing.rejectionReason;
       existing.updatedAt = Date.now();
       persistState();
       return res.json(existing);
@@ -56,16 +60,20 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
       gameName,
       intro,
       hourlyRate,
-      status: 'APPROVED' as const,
+      status: 'PENDING_REVIEW' as const,
       availability: 'ONLINE' as const,
       createdAt: Date.now(),
       updatedAt: Date.now()
     };
     companions.push(companion);
-    const user = users.find(u => u.id === userId);
-    if (user) user.role = 'PLAYER';
     persistState();
     res.status(201).json(companion);
+  });
+
+  app.get('/api/companions/me', authMiddleware, (req, res) => {
+    const companion = companions.find(c => c.userId === (req as any).authUserId);
+    if (!companion) return res.json(null);
+    res.json({ ...companion, status: companion.status === 'PENDING' ? 'PENDING_REVIEW' : companion.status });
   });
 
   app.patch('/api/companions/:id/availability', authMiddleware, (req, res) => {
@@ -215,8 +223,9 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
     const ban = getBanError(buyer, 'ORDER');
     if (ban) return sendError(res, 403, 'ORDER_ACTION_BLOCKED', ban);
     const body = (req as express.Request & { validatedBody: { companionId: string; serviceName?: string; quantity: number; couponGrantId?: string } }).validatedBody;
-    const companion = companions.find(c => c.id === body.companionId && c.status === 'APPROVED');
+    const companion = companions.find(c => c.id === body.companionId);
     if (!companion) return sendError(res, 404, 'ORDER_COMPANION_NOT_FOUND', 'Companion not found');
+    if (companion.status !== 'APPROVED') return sendError(res, 409, 'ORDER_COMPANION_NOT_APPROVED', 'Companion is not approved');
     if (companion.availability !== 'ONLINE') return sendError(res, 409, 'ORDER_COMPANION_UNAVAILABLE', 'Companion unavailable');
     const level = levelFromHourlyRate(companion.hourlyRate);
     const priceBand = assertRateInLevelBand(level, companion.hourlyRate);

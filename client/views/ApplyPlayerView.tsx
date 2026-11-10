@@ -1,5 +1,6 @@
 import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
+import { businessApi } from '../services/businessApi';
 import { 
   Search, 
   Gift, 
@@ -133,7 +134,10 @@ const {
     filteredPosts, toggleFollow, confirmUnfollow, copyToClipboard, observer, lastElementRef, legendEPals,
     navigateTo, handleBack, loadMore, toggleFavorite, handlePlayToggle, allSortedGames, favoritedGames, alphabet, scrollToLetter, groupedGames,
     EPALS, GAMES, POSTS,
+    myCompanion, myCompanionLoading, myCompanionError, recordCompanionApplication, setCompanionStatusRefresh, reloadDiscovery,
   } = useApp();
+  const [submitting, setSubmitting] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState('');
 
   return (
     <>
@@ -147,6 +151,7 @@ const {
               <div className="p-6 space-y-6 flex-1 overflow-y-auto pb-40">
                 <div className="flex items-center gap-4">
                   <button 
+                    aria-label={locale === 'ar' ? 'رجوع' : 'Back'}
                     onClick={() => {
                       if (playerApplicationStep > 1) {
                         setPlayerApplicationStep(prev => prev - 1);
@@ -164,6 +169,14 @@ const {
                   </div>
                 </div>
 
+                {myCompanionLoading && <p role="status">{locale === 'ar' ? 'جارٍ تحميل حالة الطلب…' : 'Loading application status…'}</p>}
+                {myCompanionError && <p role="alert">{locale === 'ar' ? 'تعذر تحميل الطلب.' : 'Could not load the application.'} <button onClick={() => setCompanionStatusRefresh(n => n + 1)}>{locale === 'ar' ? 'إعادة المحاولة' : 'Retry'}</button></p>}
+                {playerApplicationStatus === 'REJECTED' && <div role="status" className="rounded-xl border border-amber-500 p-4">
+                  <strong>{locale === 'ar' ? 'تم رفض الطلب' : 'Application rejected'}</strong>
+                  <p>{myCompanion?.rejectionReason}</p>
+                </div>}
+                {playerApplicationStatus === 'APPROVED' && <p role="status">{locale === 'ar' ? 'تم قبول الطلب' : 'Application approved'}</p>}
+                {submitError && <p role="alert">{submitError}</p>}
                 {/* Progress Bar */}
                 <div className="flex gap-2 h-1">
                   {[1, 2, 3, 4].map((step) => (
@@ -184,6 +197,7 @@ const {
                     <div className="space-y-2">
                       <h2 className="text-2xl font-black text-white">{t('apply.pendingTitle')}</h2>
                       <p className="text-sm text-gray-500 max-w-[280px] mx-auto">{t('apply.pendingBody')}</p>
+                      <button className="mt-3 underline" onClick={() => setCompanionStatusRefresh(n => n + 1)}>{locale === 'ar' ? 'تحديث الحالة' : 'Refresh status'}</button>
                     </div>
                     <button 
                       onClick={handleBack}
@@ -813,12 +827,24 @@ const {
                     </button>
                   ) : (
                     <button 
-                      onClick={() => {
-                        setPlayerApplicationStatus('PENDING');
-                        notify(t('apply.submittedAlert'));
+                      onClick={async () => {
+                        const game = GAMES.find(g => g.id === playerApplicationData.gameId);
+                        if (!authToken || !game || submitting) return;
+                        const gameName = game.id === 'pubg' ? 'PUBG Mobile' : game.id === 'val' ? 'Valorant' : game.name;
+                        setSubmitting(true);
+                        setSubmitError('');
+                        try {
+                          recordCompanionApplication(await businessApi.applyCompanion(authToken, gameName, playerApplicationData.intro.trim(), Number(playerApplicationData.price)));
+                          setCompanionStatusRefresh(n => n + 1);
+                          await reloadDiscovery();
+                        } catch {
+                          setSubmitError(locale === 'ar' ? 'تعذر إرسال الطلب. تحقق من البيانات والسعر.' : 'Could not submit the application. Check your details and hourly rate.');
+                        } finally {
+                          setSubmitting(false);
+                        }
                       }}
                       disabled={(() => {
-                        if (!playerApplicationData.serviceName || !playerApplicationData.price) return true;
+                        if (submitting || myCompanionLoading || myCompanionError || !playerApplicationData.serviceName || !playerApplicationData.price) return true;
                         if (playerApplicationData.promotion.type !== 'NONE') {
                           if (playerApplicationData.promotion.type === 'BUY_X_GET_Y') {
                             if (!playerApplicationData.promotion.buyX || !playerApplicationData.promotion.getY) return true;

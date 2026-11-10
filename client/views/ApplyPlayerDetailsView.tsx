@@ -133,7 +133,7 @@ const {
     filteredPosts, toggleFollow, confirmUnfollow, copyToClipboard, observer, lastElementRef, legendEPals,
     navigateTo, handleBack, loadMore, toggleFavorite, handlePlayToggle, allSortedGames, favoritedGames, alphabet, scrollToLetter, groupedGames,
     EPALS, GAMES, POSTS,
-    reloadDiscovery,
+    reloadDiscovery, recordCompanionApplication,
   } = useApp();
   const [gameName, setGameName] = React.useState('PUBG Mobile');
   const [intro, setIntro] = React.useState('');
@@ -240,8 +240,7 @@ const {
                   setSubmitting(true);
                   try {
                     const record = await businessApi.applyCompanion(authToken, gameName, intro.trim(), Number(applicationDetails.price));
-                    setPlayerApplicationStatus(record.status);
-                    if (record.status === 'APPROVED') setUserRole('PLAYER');
+                    recordCompanionApplication(record);
                     await reloadDiscovery();
                     navigateTo('APPLY_PLAYER');
                   } catch {

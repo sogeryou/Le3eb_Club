@@ -116,6 +116,7 @@ export function AdminRoute() {
       <AdminWorkbench
         token={authToken!}
         adminEmail={authUser!.email}
+        permissions={authUser!.permissions ?? []}
         onLogout={handleLogout}
       />
       <AnimatePresence>
