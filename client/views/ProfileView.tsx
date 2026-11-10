@@ -132,7 +132,13 @@ const {
     filteredPosts, toggleFollow, confirmUnfollow, copyToClipboard, observer, lastElementRef, legendEPals,
     navigateTo, handleBack, loadMore, toggleFavorite, handlePlayToggle, allSortedGames, favoritedGames, alphabet, scrollToLetter, groupedGames,
     EPALS, GAMES, POSTS,
+    detailStatus, reloadDetail,
   } = useApp();
+
+  if (detailStatus !== 'ready') return <section className="p-6" role={detailStatus === 'error' ? 'alert' : 'status'}>
+    <button onClick={handleBack}>{locale === 'ar' ? 'رجوع' : 'Back'}</button>
+    {detailStatus === 'loading' ? <p>{locale === 'ar' ? 'جارٍ التحميل…' : 'Loading companion…'}</p> : <p>{locale === 'ar' ? 'تعذر تحميل الملف.' : 'Could not load companion.'} <button onClick={() => selectedEPal && void reloadDetail(selectedEPal.id)}>{locale === 'ar' ? 'إعادة المحاولة' : 'Retry'}</button></p>}
+  </section>;
 
   return (
             <motion.div 
@@ -144,7 +150,7 @@ const {
             >
               <div className="relative h-[35vh]">
                 <img 
-                  src={selectedEPal.avatarUrl} 
+                  src={selectedEPal.avatarUrl} onError={e => { if (e.currentTarget.getAttribute('src') !== '/default-companion.svg') e.currentTarget.src = '/default-companion.svg'; }}
                   alt={selectedEPal.name} 
                   className="w-full h-full object-cover object-top"
                   referrerPolicy="no-referrer"
@@ -163,7 +169,7 @@ const {
               <div className="px-6 -mt-12 relative z-10 space-y-6">
                 {/* Avatar Frame */}
                 <div className="absolute -top-12 left-10 w-24 h-24 rounded-3xl border-4 border-[#0f071a] overflow-hidden shadow-2xl z-30">
-                  <img src={selectedEPal.avatarUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                  <img src={selectedEPal.avatarUrl} onError={e => { if (e.currentTarget.getAttribute('src') !== '/default-companion.svg') e.currentTarget.src = '/default-companion.svg'; }} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </div>
 
                 <GlassCard className="p-5 pt-16 space-y-3 relative z-20 shadow-2xl">
@@ -304,7 +310,7 @@ const {
                                       <div className="flex items-center gap-4">
                                         <div className="flex items-center gap-1">
                                           <Star className="w-4 h-4 text-yellow-500 fill-current" />
-                                          <span className="text-sm font-bold">{service.rating.toFixed(1)}</span>
+                                          <span className="text-sm font-bold">{service.rating > 0 ? service.rating.toFixed(1) : (locale === 'ar' ? 'رفيق جديد' : 'New companion')}</span>
                                         </div>
                                         <div className="flex items-center gap-1">
                                           <CheckCircle2 className="w-4 h-4 text-purple-400" />
@@ -431,9 +437,9 @@ const {
                                     <div className="flex items-center gap-2">
                                       <div className="flex items-center gap-1 bg-purple-500/20 px-2 py-0.5 rounded-lg border border-purple-500/30">
                                         <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                                        <span className="text-sm font-bold text-purple-400">{selectedEPal.rating.toFixed(1)}</span>
+                                        <span className="text-sm font-bold text-purple-400">{selectedEPal.rating > 0 ? selectedEPal.rating.toFixed(1) : (locale === 'ar' ? 'رفيق جديد' : 'New companion')}</span>
                                       </div>
-                                      <span className="text-xs text-gray-500 font-bold">{selectedEPal.orderCount} Ratings</span>
+                                      <span className="text-xs text-gray-500 font-bold">{selectedEPal.reviews?.length ?? 0} {locale === 'ar' ? 'تقييمات' : 'reviews'}</span>
                                     </div>
                                   </div>
                                   <button 

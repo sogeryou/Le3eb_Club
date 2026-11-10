@@ -3,7 +3,9 @@ import {
   Category, Game, EPal, EPalServiceVariant, Coupon, Playlink, Post, Message, ChatSession, IMOrder,
   Wallet as WalletType, RechargePackage, WalletTransaction,
 } from '@shared/types';
-import { GAMES, EPALS, POSTS } from '../constants';
+import { GAMES } from '../constants';
+import { toEPal } from './companionDiscovery';
+const POSTS: import('@shared/types').Post[] = [];
 import { businessApi, type AuthUser, type CompanionRanking } from '../services/businessApi';
 import { useI18n } from '../i18n/I18nProvider';
 import { useDeviceId } from '../hooks/useDeviceId';
@@ -459,7 +461,35 @@ export function useAppState() {
       setWithdrawSubmitting(false);
     }
   };
-  const [moreEPals, setMoreEPals] = useState<EPal[]>(EPALS.filter(e => !e.isLegend));
+  const [moreEPals, setMoreEPals] = useState<EPal[]>([]);
+  const EPALS = moreEPals;
+  const [discoveryStatus, setDiscoveryStatus] = useState<'loading' | 'ready' | 'error'>('loading');
+  const [detailStatus, setDetailStatus] = useState<'loading' | 'ready' | 'error'>('ready');
+  const detailRequest = useRef(0);
+  const reloadDiscovery = useCallback(async () => {
+    setDiscoveryStatus('loading');
+    try {
+      setMoreEPals((await businessApi.discoverCompanions()).map(toEPal));
+      setDiscoveryStatus('ready');
+    } catch {
+      setMoreEPals([]);
+      setDiscoveryStatus('error');
+    }
+  }, []);
+  useEffect(() => { void reloadDiscovery(); }, [reloadDiscovery]);
+  const reloadDetail = async (id: string) => {
+    const request = ++detailRequest.current;
+    setDetailStatus('loading');
+    try {
+      const detail = toEPal(await businessApi.getCompanion(id));
+      if (request !== detailRequest.current) return;
+      setSelectedEPal(detail);
+      setActiveServiceId(detail.services?.[0]?.id ?? null);
+      setDetailStatus('ready');
+    } catch {
+      if (request === detailRequest.current) setDetailStatus('error');
+    }
+  };
   const [loadingMore, setLoadingMore] = useState(false);
   const [favorites, setFavorites] = useState<string[]>([]);
   const [playingEPalId, setPlayingEPalId] = useState<string | null>(null);
@@ -502,23 +532,10 @@ export function useAppState() {
   const [showServerSelectorModal, setShowServerSelectorModal] = useState(false);
   const [showPlatformSelectorModal, setShowPlatformSelectorModal] = useState(false);
   const [isImSearchExpanded, setIsImSearchExpanded] = useState(false);
-  const [chatSessions, setChatSessions] = useState<ChatSession[]>([
-    { id: '1', participantId: '1', lastMessage: 'Let\'s play tomorrow!', lastTimestamp: Date.now() - 1800000, unreadCount: 2 },
-    { id: '2', participantId: '2', lastMessage: 'Nice sniper montage!', lastTimestamp: Date.now() - 3600000, unreadCount: 0 },
-    { id: '3', participantId: '3', lastMessage: 'Looking for a duo?', lastTimestamp: Date.now() - 7200000, unreadCount: 1 },
-  ]);
-  const [imOrders, setImOrders] = useState<IMOrder[]>([
-    { id: 'o1', epalId: '1', serviceName: 'League of Legends', status: 'COMPLETED', price: 15, timestamp: Date.now() - 86400000, endTime: Date.now() - 86400000 + 3600000, unit: 'Game', unitPrice: 15, quantity: 1 },
-    { id: 'o2', epalId: '3', serviceName: 'Valorant', status: 'COMPLETED', price: 24, timestamp: Date.now() - 172800000, endTime: Date.now() - 172800000 + 3600000, unit: 'Game', unitPrice: 12, quantity: 2 },
-  ]);
+  const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
+  const [imOrders, setImOrders] = useState<IMOrder[]>([]);
   const [showOngoingOrderWarning, setShowOngoingOrderWarning] = useState(false);
-  const [currentMessages, setCurrentMessages] = useState<Message[]>([
-    { id: 'm0', senderId: '1', receiverId: 'me', content: 'Long time no see!', timestamp: Date.now() - 86400000 * 2, type: 'text' }, // 2 days ago
-    { id: 'm1', senderId: '1', receiverId: 'me', content: 'Hello!', timestamp: Date.now() - 3600000, type: 'text' },
-    { id: 'm2', senderId: 'me', receiverId: '1', content: 'Hi there!', timestamp: Date.now() - 3500000, type: 'text' },
-    { id: 'm3', senderId: '1', receiverId: 'me', content: 'Want to play?', timestamp: Date.now() - 3400000, type: 'text' },
-    { id: 'm4', senderId: 'me', receiverId: '1', content: 'Sure, let\'s go!', timestamp: Date.now() - 60000, type: 'text' }, // 1 min ago
-  ]);
+  const [currentMessages, setCurrentMessages] = useState<Message[]>([]);
   const [messageInput, setMessageInput] = useState('');
   const [selectedOrder, setSelectedOrder] = useState<IMOrder | null>(null);
   const [showOrderDetailModal, setShowOrderDetailModal] = useState(false);
@@ -560,7 +577,7 @@ export function useAppState() {
   const followersOfMe = useMemo(() => new Set(['1', '2', '3', '5']), []); // Mock users who follow me
   const mutualFollowers = useMemo(() => {
     return EPALS.filter(epal => followedEPals.has(epal.id) && followersOfMe.has(epal.id));
-  }, [followedEPals, followersOfMe]);
+  }, [EPALS, followedEPals, followersOfMe]);
 
   const filteredPosts = useMemo(() => {
     let posts = [...POSTS];
@@ -648,7 +665,7 @@ export function useAppState() {
     if (node) observer.current.observe(node);
   }, [loadingMore, currentView]);
 
-  const legendEPals = useMemo(() => EPALS.filter(e => e.isLegend).slice(0, 10), []);
+  const legendEPals = EPALS;
 
   const navigateTo = (view: View, data?: any) => {
     const requiresAuth = viewRequiresAuth(view, data);
@@ -674,7 +691,9 @@ export function useAppState() {
     }
     if (view === 'GAME_DETAIL') setSelectedGame(data);
     if (view === 'PROFILE') {
+      if (!data || !EPALS.some(item => item.id === data.id)) return;
       setSelectedEPal(data);
+      void reloadDetail(data.id);
       if (data.services && data.services.length > 0) {
         setActiveServiceId(data.services[0].id);
       } else {
@@ -722,14 +741,7 @@ export function useAppState() {
 
     if (view === 'IM_DETAIL') {
       setSelectedEPal(data);
-      // Reset messages for the selected EPal (mock)
-      setCurrentMessages([
-        { id: 'm0', senderId: data.id, receiverId: 'me', content: 'Long time no see!', timestamp: Date.now() - 86400000 * 2, type: 'text' }, // 2 days ago
-        { id: 'm1', senderId: data.id, receiverId: 'me', content: `Hello! I'm ${data.name}`, timestamp: Date.now() - 3600000, type: 'text' },
-        { id: 'm2', senderId: 'me', receiverId: data.id, content: 'Hi there!', timestamp: Date.now() - 3500000, type: 'text' },
-        { id: 'm3', senderId: data.id, receiverId: 'me', content: 'Want to play?', timestamp: Date.now() - 3400000, type: 'text' },
-        { id: 'm4', senderId: 'me', receiverId: data.id, content: 'Sure, let\'s go!', timestamp: Date.now() - 60000, type: 'text' }, // 1 min ago
-      ]);
+      setCurrentMessages([]);
     }
     
     if (view === 'HOME' || view === 'ME' || view === 'COMMUNITY' || view === 'IM') {
@@ -765,12 +777,7 @@ export function useAppState() {
   };
 
   const loadMore = () => {
-    setLoadingMore(true);
-    setTimeout(() => {
-      const newItems = EPALS.filter(e => !e.isLegend).map(e => ({ ...e, id: Math.random().toString() }));
-      setMoreEPals(prev => [...prev, ...newItems]);
-      setLoadingMore(false);
-    }, 1000);
+    // The public list currently returns the complete approved directory.
   };
 
   const toggleFavorite = (gameId: string, e: MouseEvent) => {
@@ -885,7 +892,7 @@ export function useAppState() {
     isScrolling, setIsScrolling, copied, setCopied, followedEPals, setFollowedEPals, followersOfMe, mutualFollowers,
     filteredPosts, toggleFollow, confirmUnfollow, copyToClipboard, observer, lastElementRef, legendEPals,
     navigateTo, handleBack, loadMore, toggleFavorite, handlePlayToggle, allSortedGames, favoritedGames, alphabet, scrollToLetter, groupedGames,
-    EPALS, GAMES, POSTS,
+    EPALS, GAMES, POSTS, discoveryStatus, reloadDiscovery, detailStatus, reloadDetail,
   };
 }
 

@@ -155,7 +155,7 @@ const {
                 <GlassCard className="p-6 flex items-center justify-between bg-gradient-to-br from-purple-600/10 to-transparent">
                 <div className="space-y-1">
                   <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-black text-white">{selectedEPal.rating.toFixed(1)}</span>
+                    <span className="text-4xl font-black text-white">{selectedEPal.rating > 0 ? selectedEPal.rating.toFixed(1) : '—'}</span>
                     <span className="text-sm font-bold text-gray-500">/ 5.0</span>
                   </div>
                   <div className="flex gap-1">

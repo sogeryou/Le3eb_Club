@@ -2,7 +2,7 @@ export const SUPPORTED_LOCALES = ['en', 'ar', 'zh-CN', 'fr', 'ru', 'tr'] as cons
 
 export type Locale = (typeof SUPPORTED_LOCALES)[number];
 
-export const DEFAULT_LOCALE: Locale = 'en';
+export const DEFAULT_LOCALE: Locale = 'ar';
 
 export const RTL_LOCALES: ReadonlySet<Locale> = new Set(['ar']);
 

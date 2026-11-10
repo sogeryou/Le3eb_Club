@@ -139,9 +139,9 @@ const {
   } = useApp();
 
   return (
-    <div className="min-h-screen bg-[#0f071a] text-white font-sans selection:bg-purple-500/30">
+    <div className={currentView === 'HOME' ? 'min-h-screen bg-[#f8f1e5] text-[#07382a]' : 'min-h-screen bg-[#0f071a] text-white font-sans selection:bg-purple-500/30'}>
       {/* Header */}
-      {['HOME', 'COMMUNITY', 'IM', 'ME', 'COMMUNITY_SELECTOR'].includes(currentView) && (
+      {['COMMUNITY', 'IM', 'ME', 'COMMUNITY_SELECTOR'].includes(currentView) && (
         <header className="sticky top-0 z-50 bg-[#0f071a]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between">
           {currentView === 'HOME' ? (
             <>
@@ -538,7 +538,7 @@ const {
                   {(() => {
                     const gameEpals = EPALS.filter(e => e.game.toLowerCase().includes(selectedGame?.name.toLowerCase().split(' ')[0] || ''));
                     const playlinks = gameEpals.flatMap(e => e.playlinks || []).filter(pl => pl.gameName.toLowerCase().includes(selectedGame?.name.toLowerCase().split(' ')[0] || ''));
-                    const ranks = Array.from(new Set(playlinks.map(pl => pl.rank).filter(Boolean)));
+                    const ranks = Array.from(new Set<string>(playlinks.map(pl => pl.rank).filter(Boolean)));
 
                     const RANK_ORDER = [
                       'Unranked', 'Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Emerald', 'Diamond', 'Master', 'Grandmaster', 'Challenger',
@@ -822,7 +822,7 @@ const {
       {/* Bottom Navigation */}
       {(currentView === 'HOME' || currentView === 'COMMUNITY' || currentView === 'CATEGORY_SERVICES' || currentView === 'IM' || currentView === 'ME') && (
         <nav className="fixed bottom-0 left-0 right-0 z-[100] pointer-events-none">
-          <div className="bg-[#1a0b2e] border-t border-white/5 px-2 py-2 flex justify-around items-end shadow-2xl pointer-events-auto">
+          <div className={`${currentView === 'HOME' ? 'discovery-nav bg-[#07382a]' : 'bg-[#1a0b2e]'} border-t border-white/5 px-2 py-2 flex justify-around items-end shadow-2xl pointer-events-auto`}>
             <NavButton
               icon={Home}
               label={t('nav.home')}

@@ -48,6 +48,20 @@ export interface CompanionRanking {
   };
 }
 
+export interface PublicCompanion {
+  id: string;
+  gameName: string;
+  displayName: string;
+  avatarUrl: string | null;
+  intro: string;
+  hourlyRate: number;
+  availability: CompanionProfile['availability'];
+  rating: number | null;
+  completedOrderCount: number;
+  services?: { id: string; name: string; unitPrice: number; unit: string }[];
+  reviews?: { id: string; rating: number; content: string; createdAt: number; displayName: string | null; avatarUrl: string | null }[];
+}
+
 export interface BusinessOrder {
   id: string;
   userId: string;
@@ -118,6 +132,12 @@ export const businessApi = {
   },
   listCompanions(token: string) {
     return request<CompanionProfile[]>('/api/companions?available=true', 'GET', undefined, token);
+  },
+  discoverCompanions() {
+    return request<PublicCompanion[]>('/api/companions', 'GET');
+  },
+  getCompanion(id: string) {
+    return request<PublicCompanion>(`/api/companions/${encodeURIComponent(id)}`, 'GET');
   },
   listCompanionRankings(token: string, limit = 20) {
     const safeLimit = Math.max(1, Math.min(100, Math.floor(limit)));

@@ -1,4 +1,5 @@
 import React from 'react';
+import { businessApi } from '../services/businessApi';
 import { 
   Search, 
   Gift, 
@@ -132,7 +133,11 @@ const {
     filteredPosts, toggleFollow, confirmUnfollow, copyToClipboard, observer, lastElementRef, legendEPals,
     navigateTo, handleBack, loadMore, toggleFavorite, handlePlayToggle, allSortedGames, favoritedGames, alphabet, scrollToLetter, groupedGames,
     EPALS, GAMES, POSTS,
+    reloadDiscovery,
   } = useApp();
+  const [gameName, setGameName] = React.useState('PUBG Mobile');
+  const [intro, setIntro] = React.useState('');
+  const [submitting, setSubmitting] = React.useState(false);
 
   return (
             <motion.div 
@@ -150,6 +155,14 @@ const {
               </div>
 
               <div className="space-y-6">
+                <label className="block">{locale === 'ar' ? 'اللعبة' : 'Game'}
+                  <select className="block bg-[#0f071a] border rounded p-2" value={gameName} onChange={e => setGameName(e.target.value)}>
+                    {['PUBG Mobile', 'EA FC', 'Free Fire', 'Valorant'].map(game => <option key={game}>{game}</option>)}
+                  </select>
+                </label>
+                <label className="block">{locale === 'ar' ? 'نبذة عنك' : 'Introduction'}
+                  <textarea className="block w-full bg-transparent border rounded p-2" value={intro} maxLength={2000} onChange={e => setIntro(e.target.value)} />
+                </label>
                 <div className="space-y-2">
                   <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] px-2">{t('apply.detailsRankLevel')}</p>
                   <input 
@@ -221,9 +234,21 @@ const {
               </div>
 
               <button 
-                onClick={() => {
-                  setPlayerApplicationStatus('PENDING');
-                  navigateTo('APPLY_PLAYER');
+                disabled={submitting || !intro.trim() || !(Number(applicationDetails.price) > 0)}
+                onClick={async () => {
+                  if (!authToken || submitting) return;
+                  setSubmitting(true);
+                  try {
+                    const record = await businessApi.applyCompanion(authToken, gameName, intro.trim(), Number(applicationDetails.price));
+                    setPlayerApplicationStatus(record.status);
+                    if (record.status === 'APPROVED') setUserRole('PLAYER');
+                    await reloadDiscovery();
+                    navigateTo('APPLY_PLAYER');
+                  } catch {
+                    notify(locale === 'ar' ? 'تعذر إرسال الطلب. تحقق من السعر وحاول مجدداً.' : 'Could not submit the application. Check the hourly rate and retry.');
+                  } finally {
+                    setSubmitting(false);
+                  }
                 }}
                 className="w-full py-5 bg-purple-600 rounded-2xl font-black text-white shadow-[0_0_40px_rgba(168,85,247,0.4)] active:scale-95 transition-all uppercase tracking-widest text-xs"
               >

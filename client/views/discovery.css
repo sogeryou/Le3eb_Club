@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@600;700;900&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap');
+
+.discovery { min-height: 100vh; background: #f8f1e5; color: #07382a; font-family: 'IBM Plex Sans Arabic', sans-serif; }
+.discovery h1,.discovery h2,.discovery-header strong { font-family: Cairo, sans-serif; font-weight: 900; }
+.discovery-header { display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; direction:ltr; padding:16px clamp(20px,6vw,88px); }
+.discovery-header strong { font-size:26px; }
+.discovery-header small { color:#85601c; letter-spacing:.16em; }
+.discovery-language,.discovery-state button { border:1px solid #c79a3b; border-radius:8px; padding:7px 14px; color:#07382a; }
+.discovery-hero { display:grid; grid-template-columns: 1.4fr 1fr; gap:24px; align-items:center; background:#07382a; color:#fff9ed; padding:clamp(28px,5vw,64px) clamp(20px,6vw,88px); border-block-end:4px solid #c79a3b; }
+.discovery-art { justify-self:center; width:min(100%,300px); aspect-ratio:1; object-fit:cover; border-radius:20px; border:2px solid #c79a3b; }
+@media (max-width:640px) { .discovery-hero { grid-template-columns:1fr; } .discovery-art { display:none; } }
+.discovery-kicker { color:#efd9a0; font-weight:700; }
+.discovery-hero h1 { color:#efd9a0; font-size:clamp(30px,5.5vw,64px); margin:12px 0; line-height:1.2; }
+.discovery-search { display:flex; align-items:center; gap:10px; background:#fff9ed; color:#07382a; border-radius:8px; max-width:480px; padding:10px 14px; margin-top:20px; }
+.discovery-search input { width:100%; background:transparent; color:inherit; }
+.discovery-main { padding:28px clamp(20px,6vw,88px) 100px; }
+.discovery-main h2 { margin:0 0 14px; font-size:24px; }
+.discovery-games,.discovery-players { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,160px),1fr)); gap:14px; margin-bottom:28px; }
+.discovery-games button { position:relative; display:flex; align-items:end; min-height:145px; overflow:hidden; border-radius:10px; border:1px solid #c79a3b; background:#07382a; color:#fff9ed; font-weight:700; }
+.discovery-games img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
+.discovery-games button span { position:relative; width:100%; padding:24px 12px 10px; display:flex; gap:8px; align-items:center; background:linear-gradient(transparent,#052a1f); }
+.discovery-games button[aria-pressed=true] { outline:2px solid #85601c; outline-offset:2px; }
+.discovery-games button[aria-pressed=true] { color:#efd9a0; background:#07382a; }
+.discovery-state,.discovery-player { background:#fff9ed; border:1px solid #e0cda5; padding:18px; border-radius:10px; }
+.discovery-player { display:flex; align-items:start; gap:12px; text-align:start; }
+.discovery-player img { width:56px; height:56px; border-radius:10px; object-fit:cover; }
+.discovery-player span { display:block; overflow-wrap:anywhere; }
+.discovery-nav button { color:#efd9a0; }
+.discovery-nav button :is(span,svg) { color:inherit; }
+.discovery-nav button span:first-child { background:transparent; box-shadow:none; }
