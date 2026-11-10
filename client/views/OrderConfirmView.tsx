@@ -1,4 +1,5 @@
 import React from 'react';
+import { businessApi } from '../services/businessApi';
 import { 
   Search, 
   Gift, 
@@ -133,6 +134,10 @@ const {
     navigateTo, handleBack, loadMore, toggleFavorite, handlePlayToggle, allSortedGames, favoritedGames, alphabet, scrollToLetter, groupedGames,
     EPALS, GAMES, POSTS,
   } = useApp();
+  const submitting = React.useRef(false);
+  const [busy, setBusy] = React.useState(false);
+  const [submitError, setSubmitError] = React.useState('');
+  const [createdOrderId, setCreatedOrderId] = React.useState('');
 
   return (
             <motion.div 
@@ -287,51 +292,37 @@ const {
               {/* Action Buttons */}
               <div className="fixed bottom-0 left-0 right-0 z-50 px-6 pb-8 pt-4 bg-gradient-to-t from-[#0f071a] to-transparent">
                 <div className="max-w-md mx-auto">
+                  {submitError && <p role="alert">{submitError}</p>}
+                  {selectedCoupon && <p role="status">{locale === 'ar' ? 'أزل القسيمة للمتابعة.' : 'Remove the preview coupon to continue.'}</p>}
+                  {busy && <p role="status">{locale === 'ar' ? 'جارٍ إنشاء الطلب…' : 'Creating order…'}</p>}
+                  {createdOrderId && <p role="status">{locale === 'ar' ? 'تم إنشاء الطلب' : 'Order created'}: <bdi>{createdOrderId}</bdi></p>}
                   <button 
-                    onClick={() => {
-                      if (!selectedEPal || !selectedVariant) return;
-
-                      // Check for ongoing orders
-                      const hasOngoingOrder = imOrders.some(order => 
-                        order.epalId === selectedEPal.id && 
-                        order.status !== 'COMPLETED' && 
-                        order.status !== 'CANCELLED'
-                      );
-
-                      if (hasOngoingOrder) {
-                        setShowOngoingOrderWarning(true);
-                        return;
+                    disabled={busy || !!selectedCoupon || !!createdOrderId}
+                    onClick={async () => {
+                      if (!selectedEPal || !selectedVariant || submitting.current || selectedCoupon || createdOrderId) return;
+                      if (!authToken) { openAuthModal(t('auth.loginRequiredFeature')); return; }
+                      submitting.current = true;
+                      setBusy(true);
+                      setSubmitError('');
+                      try {
+                        const orders = await businessApi.listOrders(authToken);
+                        if (orders.some(order => order.companionId === selectedEPal.id &&
+                          !['COMPLETED', 'CANCELLED'].includes(order.status))) {
+                          setShowOngoingOrderWarning(true);
+                          return;
+                        }
+                        const order = await businessApi.createOrder(authToken, selectedEPal.id, selectedVariant.name, orderQuantity);
+                        setCreatedOrderId(order.id);
+                      } catch {
+                        setSubmitError(locale === 'ar' ? 'تعذر إنشاء الطلب. تحقق من الرصيد وتوفر الرفيق وحاول مجدداً.' : 'Could not create the order. Check your balance and companion availability before retrying.');
+                      } finally {
+                        submitting.current = false;
+                        setBusy(false);
                       }
-
-                      // Add new order
-                      const newOrder: IMOrder = {
-                        id: `o${Date.now()}`,
-                        epalId: selectedEPal.id,
-                        serviceName: selectedEPal.services?.find(s => s.id === activeServiceId)?.name || selectedEPal.game,
-                        status: 'PENDING',
-                        price: (() => {
-                          const subtotal = selectedVariant.price * orderQuantity;
-                          let discount = 0;
-                          if (selectedCoupon) {
-                            discount = selectedCoupon.type === 'FIXED' 
-                              ? selectedCoupon.discount 
-                              : Math.floor(subtotal * (selectedCoupon.discount / 100));
-                          }
-                          return Math.max(0, subtotal - discount);
-                        })(),
-                        timestamp: Date.now(),
-                        unit: selectedVariant.unit,
-                        unitPrice: selectedVariant.price,
-                        quantity: orderQuantity
-                      };
-
-                      setImOrders(prev => [newOrder, ...prev]);
-                      navigateTo('IM');
-                      setImTab('ORDER');
                     }}
                     className="w-full py-4 rounded-2xl bg-purple-600 font-bold text-lg shadow-[0_0_30px_rgba(168,85,247,0.4)] active:scale-95 transition-all text-white"
                   >
-                    {t('order.payStart')}
+                    {locale === 'ar' ? 'إنشاء الطلب' : 'Place order'}
                   </button>
                 </div>
               </div>

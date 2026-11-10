@@ -163,7 +163,6 @@ const {
                   <h1 className="text-3xl font-bold text-white drop-shadow-lg">{selectedGame?.name}</h1>
                   <div className="flex items-center gap-2 mt-1">
                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                    <p className="text-purple-400 font-bold text-sm tracking-widest drop-shadow-md">{selectedGame?.onlineCount} Online</p>
                   </div>
                 </div>
               </div>

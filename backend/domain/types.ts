@@ -56,6 +56,7 @@ export type PersistedState = {
   users: Array<{
     id: string;
     username: string;
+    avatarUrl?: string;
     email: string;
     passwordHash: string;
     password?: string;

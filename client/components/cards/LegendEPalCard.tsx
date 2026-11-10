@@ -21,7 +21,7 @@ export const LegendEPalCard: React.FC<{
           <h4 className={`font-bold truncate ${variant === 'overlay' ? 'text-white text-xs sm:text-sm' : 'text-white text-sm'}`}>{epal.name}</h4>
           <div className="flex items-center gap-0.5 shrink-0 bg-black/20 px-1 py-0.5 rounded-md">
             <Star className="w-2 h-2 text-yellow-500 fill-current" />
-            <span className="text-[8px] text-white font-bold">{epal.rating.toFixed(1)}</span>
+            <span className="text-[8px] text-white font-bold">{epal.rating > 0 ? epal.rating.toFixed(1) : '—'}</span>
           </div>
         </div>
         

@@ -6,6 +6,7 @@ import { zValidate } from '../middleware/validate.js';
 import { assertRateInLevelBand } from '../policy/index.js';
 import { levelFromHourlyRate } from '../policy/leveling.js';
 import type { CouponGrant } from './ops.js';
+import { publicCompanion } from '../domain/publicCompanion.js';
 
 const MODERATION_BLOCKLIST = ['诈骗', 'fraud', 'scam', '色情', 'porn'];
 
@@ -82,7 +83,10 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
   app.get('/api/companions', (req, res) => {
     const onlyAvailable = req.query.available === 'true';
     const list = companions.filter(c => c.status === 'APPROVED' && (!onlyAvailable || c.availability === 'ONLINE'));
-    res.json(list);
+    res.json(list.flatMap(c => {
+      const card = publicCompanion(c, getUserById(c.userId), orders, reviews);
+      return card ? [{ ...c, ...card }] : [];
+    }));
   });
 
   app.get('/api/companions/rankings', (req, res) => {
@@ -164,6 +168,21 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
       };
     });
     res.json(ranked);
+  });
+
+  app.get('/api/companions/:id', (req, res) => {
+    const companion = companions.find(c => c.id === req.params.id);
+    const card = companion && publicCompanion(companion, getUserById(companion.userId), orders, reviews);
+    if (!companion || !card) return sendError(res, 404, 'COMPANION_NOT_FOUND', 'Companion not found');
+    res.json({
+      ...card,
+      services: [{ id: companion.id, name: companion.gameName, unitPrice: companion.hourlyRate, unit: 'hour' }],
+      reviews: reviews.filter(r => r.companionId === companion.id && r.status === 'APPROVED').map(r => ({
+        id: r.id, rating: r.rating, content: r.content, createdAt: r.createdAt,
+        displayName: getUserById(r.userId)?.username ?? null,
+        avatarUrl: getUserById(r.userId)?.avatarUrl ?? null,
+      })),
+    });
   });
 
   app.post('/api/exposure/batch', (req, res) => {

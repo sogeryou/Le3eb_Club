@@ -56,7 +56,7 @@ export const EPalCard: React.FC<{
       
       <div className="flex items-center gap-1">
         <Star className="w-3.5 h-3.5 text-yellow-500 fill-current" />
-        <span className="text-sm text-white font-bold">{epal.rating.toFixed(1)}</span>
+        <span className="text-sm text-white font-bold">{epal.rating > 0 ? epal.rating.toFixed(1) : '—'}</span>
         <span className="text-[10px] text-gray-500 font-medium">
           ({epal.orderCount >= 1000 ? `${(epal.orderCount / 1000).toFixed(1)}k` : epal.orderCount})
         </span>

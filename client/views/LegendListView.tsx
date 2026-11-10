@@ -151,7 +151,7 @@ const {
               </div>
 
               <div className="px-6 grid grid-cols-2 gap-4">
-                {EPALS.filter(e => e.isLegend).map(epal => (
+                {EPALS.map(epal => (
                   <LegendEPalCard 
                     key={epal.id} 
                     epal={epal} 
