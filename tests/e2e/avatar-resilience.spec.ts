@@ -21,6 +21,12 @@ test('avatar upload, fallback and persisted companion image', async ({ page, req
       headers, data: { gameName: 'PUBG Mobile', intro: 'Local avatar acceptance test', hourlyRate: 7 },
     });
     expect(apply.status()).toBe(201);
+    const admin = await request.post('/api/auth/login', { data: { email: process.env.ADMIN_EMAIL, password: process.env.ADMIN_PASSWORD } });
+    expect(admin.ok()).toBeTruthy();
+    const approved = await request.post(`/api/admin/companions/${(await apply.json()).id}/review`, {
+      headers: { Authorization: `Bearer ${(await admin.json()).token}` }, data: { action: 'APPROVE' },
+    });
+    expect(approved.ok()).toBeTruthy();
     const unsignedCommit = await request.post('/api/uploads/commit', { data: { purpose: 'avatar' } });
     expect(unsignedCommit.status()).toBe(401);
   }

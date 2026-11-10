@@ -72,8 +72,8 @@ export const adminApi = {
   listCompanions(token: string, params?: ListQuery) {
     return request<PagedResult<any>>(`/api/admin/companions${toQuery(params)}`, 'GET', token);
   },
-  reviewCompanion(token: string, companionId: string, action: 'APPROVE' | 'REJECT') {
-    return request(`/api/admin/companions/${companionId}/review`, 'POST', token, { action });
+  reviewCompanion(token: string, companionId: string, action: 'APPROVE' | 'REJECT', reason?: string, expectedUpdatedAt?: number) {
+    return request(`/api/admin/companions/${companionId}/review`, 'POST', token, { action, reason, expectedUpdatedAt });
   },
   listOrders(token: string, params?: ListQuery) {
     return request<PagedResult<any>>(`/api/admin/orders${toQuery(params)}`, 'GET', token);

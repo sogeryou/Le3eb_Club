@@ -593,7 +593,7 @@ async function startServer() {
     res.json({
       me: toPublicUser((req as any).authUser),
       metrics: {
-        companionsPending: companions.filter(c => c.status === 'PENDING').length,
+        companionsPending: companions.filter(c => c.status === 'PENDING' || c.status === 'PENDING_REVIEW').length,
         ordersDisputed: unresolvedDisputes.length,
         reviewsRejected: reviews.filter(review => review.status === 'REJECTED').length,
         openRiskEvents: openRisks.length,
@@ -629,21 +629,35 @@ async function startServer() {
     const sortDir = parseSortDir(req.query.sortDir);
     const filtered = companions.filter(item => {
       const matchQ = !q || item.id.toLowerCase().includes(q) || item.gameName.toLowerCase().includes(q);
-      const matchStatus = !status || item.status === status;
+      const matchStatus = !status || item.status === status || (status === 'PENDING_REVIEW' && item.status === 'PENDING');
       return matchQ && matchStatus;
     });
     const sorted = sortByKey(filtered, sortBy, sortDir);
-    res.json(cursorPaginate(sorted, req.query.page, req.query.pageSize, req.query.cursor));
+    res.json(cursorPaginate(sorted.map(companion => ({
+      ...companion,
+      status: companion.status === 'PENDING' ? 'PENDING_REVIEW' : companion.status,
+      displayName: getUserById(companion.userId)?.username ?? null,
+      avatarUrl: getUserById(companion.userId)?.avatarUrl ?? null,
+    })), req.query.page, req.query.pageSize, req.query.cursor));
   });
 
   app.post('/api/admin/companions/:id/review', authMiddleware, requireAdmin('COMPANION_REVIEW'), (req, res) => {
     const companion = companions.find(item => item.id === req.params.id);
     if (!companion) return sendError(res, 404, 'COMPANION_NOT_FOUND', 'Companion not found');
-    const action = req.body?.action as 'APPROVE' | 'REJECT';
-    if (!action) return sendError(res, 400, 'ADMIN_ACTION_REQUIRED', 'action required');
+    const action = req.body?.action;
+    const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim() : '';
+    if (action !== 'APPROVE' && action !== 'REJECT') return sendError(res, 400, 'ADMIN_ACTION_REQUIRED', 'Use APPROVE or REJECT');
+    if (action === 'REJECT' && (!reason || reason.length > 1000)) return sendError(res, 400, 'COMPANION_REJECTION_REASON_REQUIRED', 'Enter a rejection reason (1–1000 characters)');
+    if (companion.userId === (req as any).authUserId) return sendError(res, 403, 'COMPANION_SELF_REVIEW', 'You cannot review your own application');
+    if (companion.status !== 'PENDING' && companion.status !== 'PENDING_REVIEW') return sendError(res, 409, 'COMPANION_REVIEW_NOT_PENDING', 'Only pending applications can be reviewed');
+    if (req.body?.expectedUpdatedAt !== undefined && req.body.expectedUpdatedAt !== companion.updatedAt) return sendError(res, 409, 'COMPANION_REVIEW_STALE', 'Application changed; reload before reviewing');
     companion.status = action === 'APPROVE' ? 'APPROVED' : 'REJECTED';
+    if (action === 'REJECT') companion.rejectionReason = reason;
+    else delete companion.rejectionReason;
+    const applicant = getUserById(companion.userId);
+    if (action === 'APPROVE' && applicant?.role === 'USER') applicant.role = 'PLAYER';
     companion.updatedAt = Date.now();
-    appendAuditLog((req as any).authUserId, `COMPANION_${action}`, 'companion', companion.id, { status: companion.status });
+    appendAuditLog((req as any).authUserId, `COMPANION_${action}`, 'companion', companion.id, { status: companion.status, ...(action === 'REJECT' ? { reason } : {}) });
     persistState();
     res.json(companion);
   });

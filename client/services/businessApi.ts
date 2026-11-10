@@ -23,7 +23,8 @@ export interface CompanionProfile {
   gameName: string;
   intro: string;
   hourlyRate: number;
-  status: 'PENDING' | 'APPROVED' | 'REJECTED';
+  status: 'PENDING_REVIEW' | 'APPROVED' | 'REJECTED';
+  rejectionReason?: string;
   availability: 'ONLINE' | 'OFFLINE' | 'BUSY';
 }
 
@@ -130,6 +131,9 @@ export const businessApi = {
   },
   applyCompanion(token: string, gameName: string, intro: string, hourlyRate: number) {
     return request<CompanionProfile>('/api/companions/apply', 'POST', { gameName, intro, hourlyRate }, token);
+  },
+  getMyCompanion(token: string) {
+    return request<CompanionProfile | null>('/api/companions/me', 'GET', undefined, token);
   },
   listCompanions(token: string) {
     return request<CompanionProfile[]>('/api/companions?available=true', 'GET', undefined, token);

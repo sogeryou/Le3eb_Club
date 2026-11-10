@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
+import { ResilientImage } from '../client/components/ResilientImage';
 import {
   LayoutDashboard,
   Gamepad2,
@@ -26,6 +27,7 @@ const ADMIN_I18N_PREP_NOTE = 'M8 admin localization prep anchor';
 type AdminWorkbenchProps = {
   token: string;
   adminEmail: string;
+  permissions: string[];
   onLogout: () => void | Promise<void>;
 };
 
@@ -55,10 +57,11 @@ const MODULES: SchemaModule[] = [
     key: 'companions',
     title: '陪玩审核',
     columns: [
-      { key: 'id', label: '编号' },
+      { key: 'displayName', label: '陪玩' },
       { key: 'gameName', label: '游戏' },
+      { key: 'hourlyRate', label: '时薪（币）' },
       { key: 'status', label: '状态' },
-      { key: 'availability', label: '可接单' }
+      { key: 'intro', label: '简介' }
     ],
     actions: [{ label: '通过', action: 'APPROVE' }, { label: '驳回', action: 'REJECT' }]
   },
@@ -190,6 +193,7 @@ const STATUS_LABEL_ZH: Record<string, string> = {
   RISK_HOLD: '风控中',
   PENDING: '待处理',
   APPROVED: '已通过',
+  PENDING_REVIEW: '待审核',
   ONLINE: '在线',
   COMPLETED: '已完成',
   SUCCESS: '成功',
@@ -275,7 +279,7 @@ function renderRecordTitle(module: SchemaModule, record: any): string {
   return record.id;
 }
 
-export default function AdminWorkbench({ token, adminEmail, onLogout }: AdminWorkbenchProps) {
+export default function AdminWorkbench({ token, adminEmail, permissions, onLogout }: AdminWorkbenchProps) {
   void ADMIN_I18N_PREP_NOTE;
   const { t } = useI18n();
   const [status, setStatus] = useState(t('admin.status.ready'));
@@ -291,7 +295,7 @@ export default function AdminWorkbench({ token, adminEmail, onLogout }: AdminWor
   const [moduleFilters, setModuleFilters] = useState<
     Record<string, { q?: string; status?: string; severity?: string; page: number; pageSize: number; cursor?: string; sortBy?: string; sortDir?: 'asc' | 'desc' }>
   >({
-    companions: { q: '', status: '', page: 1, pageSize: 10, cursor: '', sortBy: 'updatedAt', sortDir: 'desc' },
+    companions: { q: '', status: 'PENDING_REVIEW', page: 1, pageSize: 10, cursor: '', sortBy: 'updatedAt', sortDir: 'desc' },
     orders: { q: '', status: '', page: 1, pageSize: 10, cursor: '', sortBy: 'updatedAt', sortDir: 'desc' },
     reviews: { q: '', status: '', page: 1, pageSize: 10, cursor: '', sortBy: 'updatedAt', sortDir: 'desc' },
     risks: { status: '', severity: '', page: 1, pageSize: 10, cursor: '', sortBy: 'createdAt', sortDir: 'desc' }
@@ -375,14 +379,15 @@ export default function AdminWorkbench({ token, adminEmail, onLogout }: AdminWor
     const orderFilter = moduleFilters.orders;
     const reviewFilter = moduleFilters.reviews;
     const riskFilter = moduleFilters.risks;
+    const emptyPage = { items: [], nextCursor: null };
     const [d, c, o, r, rk, a, f, ar] = await Promise.all([
       adminApi.dashboard(authToken),
-      adminApi.listCompanions(authToken, companionFilter),
-      adminApi.listOrders(authToken, orderFilter),
-      adminApi.listReviews(authToken, reviewFilter),
-      adminApi.listRiskEvents(authToken, riskFilter),
+      permissions.includes('COMPANION_REVIEW') ? adminApi.listCompanions(authToken, companionFilter) : emptyPage,
+      permissions.includes('ORDER_OPERATE') ? adminApi.listOrders(authToken, orderFilter) : emptyPage,
+      permissions.includes('REVIEW_MODERATE') ? adminApi.listReviews(authToken, reviewFilter) : emptyPage,
+      permissions.includes('RISK_REVIEW') ? adminApi.listRiskEvents(authToken, riskFilter) : emptyPage,
       adminApi.auditLogs(authToken, auditFilter),
-      adminApi.reconcile(authToken, start, now),
+      permissions.includes('FINANCE_RECON') ? adminApi.reconcile(authToken, start, now) : null,
       adminApi.auditLogReport(authToken, start, now)
     ]);
     const templates = await adminApi.roleTemplates(authToken);
@@ -468,6 +473,21 @@ export default function AdminWorkbench({ token, adminEmail, onLogout }: AdminWor
     } catch (error) {
       setStatus((error as Error).message || t('admin.status.operationFailed'));
     }
+  };
+  const reviewCompanion = (record: { id: string; updatedAt: number }, action: 'APPROVE' | 'REJECT') => {
+    if (!token) return;
+    let reason: string | undefined;
+    if (action === 'REJECT') {
+      const value = window.prompt('请输入驳回理由（申请人可见）');
+      if (value === null) return;
+      reason = value.trim();
+      if (!reason || reason.length > 1000) {
+        setStatus('驳回理由必须为 1–1000 个字符。');
+        return;
+      }
+    }
+    void run(action === 'APPROVE' ? '批准陪玩' : '驳回申请',
+      () => adminApi.reviewCompanion(token, record.id, action, reason, record.updatedAt));
   };
   const handleLogout = async () => {
     setDashboard(null);
@@ -574,14 +594,16 @@ export default function AdminWorkbench({ token, adminEmail, onLogout }: AdminWor
               ))}
             </div>
             <div className="flex flex-wrap gap-1 pt-1">
-              {module.key === 'companions' &&
+              {module.key === 'companions' && <div className="flex w-full gap-2 items-start">
+                <ResilientImage kind="avatar" src={record.avatarUrl} className="w-10 h-10 rounded object-cover" />
+                <p className="whitespace-pre-wrap break-all">{record.intro}</p>
+              </div>}
+              {module.key === 'companions' && record.status === 'PENDING_REVIEW' &&
                 module.actions.map(a => (
                   <button
                     className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-[10px]"
                     key={a.action}
-                    onClick={() =>
-                      run(`陪玩 ${a.label}`, () => adminApi.reviewCompanion(token!, record.id, a.action as 'APPROVE' | 'REJECT'))
-                    }
+                    onClick={() => reviewCompanion(record, a.action as 'APPROVE' | 'REJECT')}
                   >
                     {a.label}
                   </button>
@@ -648,18 +670,18 @@ export default function AdminWorkbench({ token, adminEmail, onLogout }: AdminWor
               <tr key={record.id} className="hover:bg-white/5 transition-colors">
                 {module.columns.map(col => (
                   <td key={`${record.id}-${col.key}`} className="border-b border-white/5 py-2 px-3 text-gray-200">
+                    {module.key === 'companions' && col.key === 'displayName' &&
+                      <ResilientImage kind="avatar" src={record.avatarUrl} className="inline-block w-9 h-9 rounded me-2 object-cover" />}
                     {renderCellValue(record[col.key])}
                   </td>
                 ))}
                 <td className="border-b border-white/5 py-2 px-3 space-x-1 whitespace-nowrap">
-                  {module.key === 'companions' &&
+                  {module.key === 'companions' && record.status === 'PENDING_REVIEW' &&
                     module.actions.map(a => (
                       <button
                         className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 transition-colors text-purple-200"
                         key={a.action}
-                        onClick={() =>
-                          run(`陪玩 ${a.label}`, () => adminApi.reviewCompanion(token!, record.id, a.action as 'APPROVE' | 'REJECT'))
-                        }
+                        onClick={() => reviewCompanion(record, a.action as 'APPROVE' | 'REJECT')}
                       >
                         {a.label}
                       </button>
