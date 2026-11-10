@@ -1,3 +1,4 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
   Search, 
@@ -205,7 +206,7 @@ const {
                       onClick={() => navigateTo('IM_DETAIL', epal)}
                       className="flex items-center gap-4 hover:bg-white/5 transition-all cursor-pointer p-2 -mx-2 rounded-xl"
                     >
-                      <img src={epal.avatarUrl} className="w-14 h-14 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
+                      <ResilientImage kind="avatar" src={epal.avatarUrl} className="w-14 h-14 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
                       <div className="flex-1 min-w-0">
                         <h4 className="font-bold text-white truncate">{epal.name}</h4>
                         <p className="text-xs text-gray-500 truncate">{epal.game}</p>

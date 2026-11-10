@@ -1,3 +1,4 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { businessApi } from '../services/businessApi';
 import { 
@@ -158,7 +159,7 @@ const {
               {/* Service Info */}
               <GlassCard className="p-4 flex gap-4">
                 <div className="w-20 h-28 rounded-xl overflow-hidden shrink-0 border border-white/10">
-                  <img 
+                  <ResilientImage kind="avatar"
                     src={selectedEPal.services?.find(s => s.id === activeServiceId)?.posterUrl || selectedEPal.avatarUrl} 
                     className="w-full h-full object-cover"
                     referrerPolicy="no-referrer"

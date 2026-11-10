@@ -1,3 +1,4 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
   Search, 
@@ -305,7 +306,7 @@ const {
                               if (epal) navigateTo('PROFILE', epal);
                             }}
                           >
-                            <img 
+                            <ResilientImage kind="avatar"
                               src={review.userAvatar} 
                               className="w-12 h-12 rounded-full object-cover border-2 border-white/5 group-hover:border-purple-500/50 transition-all" 
                               referrerPolicy="no-referrer" 

@@ -1,3 +1,4 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
   Search, 
@@ -184,7 +185,7 @@ const {
                         className="flex items-center gap-4 hover:bg-white/5 transition-all cursor-pointer p-2 -mx-2 rounded-xl"
                       >
                         <div className="relative">
-                          <img src={participant.avatarUrl} className="w-14 h-14 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
+                          <ResilientImage kind="avatar" src={participant.avatarUrl} className="w-14 h-14 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
                           {session.unreadCount > 0 && (
                             <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-600 rounded-full border-2 border-[#0f071a] flex items-center justify-center text-[10px] font-bold text-white">
                               {session.unreadCount}
@@ -221,7 +222,7 @@ const {
                           className="flex items-center gap-4 hover:bg-white/5 transition-all cursor-pointer p-2 -mx-2 rounded-xl"
                         >
                           <div className="relative">
-                            <img src={epal.avatarUrl} className="w-14 h-14 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
+                            <ResilientImage kind="avatar" src={epal.avatarUrl} className="w-14 h-14 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
                             {session && session.unreadCount > 0 && (
                               <div className="absolute -top-1 -right-1 w-5 h-5 bg-purple-600 rounded-full border-2 border-[#0f071a] flex items-center justify-center text-[10px] font-bold text-white">
                                 {session.unreadCount}
@@ -259,7 +260,7 @@ const {
                         className="flex items-center gap-4 py-4 border-b border-white/5 hover:bg-white/5 transition-all cursor-pointer group px-2 -mx-2"
                       >
                         <div className="relative shrink-0">
-                          <img src={epal.avatarUrl} className="w-14 h-14 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
+                          <ResilientImage kind="avatar" src={epal.avatarUrl} className="w-14 h-14 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
                           <div className={`absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full border-2 border-[#0f071a] ${epal.onlineStatus === 'Online' ? 'bg-green-500' : 'bg-gray-500'}`} />
                         </div>
                         <div className="flex-1 min-w-0">

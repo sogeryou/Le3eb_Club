@@ -1,3 +1,4 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
   Search, 
@@ -164,7 +165,7 @@ const {
                           className="flex flex-col gap-2 transition-all text-center group"
                         >
                           <div className="relative aspect-square rounded-2xl overflow-hidden shadow-lg border border-white/5">
-                            <img 
+                            <ResilientImage
                               src={game.imageUrl} 
                               alt={game.name} 
                               className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"

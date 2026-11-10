@@ -3,6 +3,7 @@ import type { RechargeOrder, RechargePackage, Wallet as WalletType, WalletTransa
 export interface AuthUser {
   id: string;
   username: string;
+  avatarUrl?: string | null;
   email: string;
   role: 'USER' | 'PLAYER' | 'ADMIN';
   adminRoleTemplate?: string;
@@ -135,6 +136,22 @@ export const businessApi = {
   },
   discoverCompanions() {
     return request<PublicCompanion[]>('/api/companions', 'GET');
+  },
+  async uploadAvatar(token: string, file: File) {
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || !file.size || file.size > 5 * 1024 * 1024) {
+      throw new Error('Choose a JPEG, PNG or WebP image up to 5 MB.');
+    }
+    const signed = await request<{ url: string; key: string; maxBytes: number; headers?: { 'If-None-Match'?: string } }>('/api/uploads/signed', 'POST', { purpose: 'avatar', mime: file.type }, token);
+    if (file.size > signed.maxBytes) throw new Error('Image is too large.');
+    const local = signed.url.startsWith('/api/uploads/dev-put?');
+    if (!local && !signed.url.startsWith('https://')) throw new Error('Upload location is invalid.');
+    const upload = await fetch(local ? apiUrl(signed.url) : signed.url, {
+      method: 'PUT', body: file, redirect: 'error',
+      headers: local ? { 'Content-Type': file.type, Authorization: `Bearer ${token}` }
+        : { 'Content-Type': file.type, ...(signed.headers?.['If-None-Match'] === '*' ? { 'If-None-Match': '*' } : {}) },
+    });
+    if (!upload.ok) throw new Error('Image upload failed.');
+    return request<{ avatarUrl: string }>('/api/uploads/commit', 'POST', { purpose: 'avatar', key: signed.key }, token);
   },
   getCompanion(id: string) {
     return request<PublicCompanion>(`/api/companions/${encodeURIComponent(id)}`, 'GET');

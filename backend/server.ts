@@ -312,11 +312,12 @@ async function startServer() {
   };
   const createToken = () => `sess_${crypto.randomBytes(32).toString('hex')}`;
   const getUserById = (userId: string) => users.find(user => user.id === userId);
-  const toPublicUser = (user: { id: string; username: string; email: string; role: UserRole; adminRoleTemplate?: AdminRoleTemplate; permissions?: AdminPermission[] } | undefined) =>
+  const toPublicUser = (user: { id: string; username: string; avatarUrl?: string; email: string; role: UserRole; adminRoleTemplate?: AdminRoleTemplate; permissions?: AdminPermission[] } | undefined) =>
     user
       ? {
           id: user.id,
           username: user.username,
+          avatarUrl: user.avatarUrl ?? null,
           email: user.email,
           role: user.role,
           adminRoleTemplate: user.adminRoleTemplate,

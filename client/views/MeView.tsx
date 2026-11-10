@@ -1,3 +1,4 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
   Search, 
@@ -132,6 +133,7 @@ const {
     filteredPosts, toggleFollow, confirmUnfollow, copyToClipboard, observer, lastElementRef, legendEPals,
     navigateTo, handleBack, loadMore, toggleFavorite, handlePlayToggle, allSortedGames, favoritedGames, alphabet, scrollToLetter, groupedGames,
     EPALS, GAMES, POSTS,
+    authUser,
   } = useApp();
 
   return (
@@ -178,7 +180,7 @@ const {
                 <div className="flex items-center gap-4 px-2">
                   <div className="relative">
                     <div className="w-20 h-20 rounded-[28px] border-4 border-[#0f071a] overflow-hidden shadow-2xl">
-                      <img src={'/default-companion.svg'} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <ResilientImage kind="avatar" src={authUser?.avatarUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     </div>
                   </div>
                   <div className="flex-1 min-w-0">

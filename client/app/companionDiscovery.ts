@@ -3,6 +3,11 @@ import type { PublicCompanion } from '../services/businessApi';
 
 export const defaultAvatar = '/default-companion.svg';
 
+const covers = new Map([
+  ['pubg mobile', '/game-pubg.jpg'], ['ea fc', '/game-fc.jpg'],
+  ['free fire', '/game-freefire.jpg'], ['valorant', '/game-valorant.jpg'],
+]);
+
 export function safeAvatar(url: string | null) {
   if (url?.startsWith('/') && !url.startsWith('//') && !url.includes('\\')) return url;
   try {
@@ -19,7 +24,7 @@ export function toEPal(row: PublicCompanion): EPal {
     rating: row.rating ?? 0, orderCount: String(row.completedOrderCount), tags: [],
     onlineStatus: ({ ONLINE: 'Online', OFFLINE: 'Offline', BUSY: 'Busy' } as const)[row.availability],
     services: row.services?.map(service => ({
-      id: service.id, name: service.name, icon: '', posterUrl: defaultAvatar, description: row.intro,
+      id: service.id, name: service.name, icon: '', posterUrl: covers.get(service.name.toLowerCase()) ?? '/default-cover.svg', description: row.intro,
       rating: row.rating ?? 0, orderCount: String(row.completedOrderCount), screenshots: [],
       variants: [{ name: service.name, price: service.unitPrice, unit: service.unit }],
     })),

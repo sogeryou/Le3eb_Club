@@ -1,4 +1,6 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
+import { businessApi } from '../services/businessApi';
 import { 
   Search, 
   Gift, 
@@ -69,7 +71,6 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { Category, Game, EPal, EPalServiceVariant, Coupon, Playlink, Post, Message, ChatSession, IMOrder, Wallet as WalletType, RechargePackage, WalletTransaction, RechargeOrder } from '@shared/types';
 import { PRODUCT_SEMVER } from '../constants';
-import { GlassCard } from '../components/ui/GlassCard';
 import { IconButton } from '../components/ui/IconButton';
 import { WaveAnimation } from '../components/ui/WaveAnimation';
 import { CoinIcon } from '../components/ui/CoinIcon';
@@ -132,7 +133,10 @@ const {
     filteredPosts, toggleFollow, confirmUnfollow, copyToClipboard, observer, lastElementRef, legendEPals,
     navigateTo, handleBack, loadMore, toggleFavorite, handlePlayToggle, allSortedGames, favoritedGames, alphabet, scrollToLetter, groupedGames,
     EPALS, GAMES, POSTS,
+    authUser, setAuthUser, reloadDiscovery,
   } = useApp();
+  const [uploading, setUploading] = React.useState(false);
+  const [avatarStatus, setAvatarStatus] = React.useState('');
 
   return (
             <motion.div 
@@ -144,35 +148,55 @@ const {
               <SettingsSubPage title="Edit Profile" onBack={() => setCurrentView('SETTINGS')}>
                 <div className="flex flex-col items-center gap-6 py-4">
                   <div className="relative group">
-                    <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-purple-500/50 shadow-[0_0_30px_rgba(168,85,247,0.3)]">
-                      <img 
-                        src="https://picsum.photos/seed/user1/200/200" 
+                    <div className="w-24 h-24 rounded-3xl overflow-hidden border-2 border-[#c79a3b]/50 shadow-[0_0_30px_rgba(168,85,247,0.3)]">
+                      <ResilientImage kind="avatar"
+                        src={authUser?.avatarUrl}
                         alt="Avatar" 
                         className="w-full h-full object-cover"
                         referrerPolicy="no-referrer"
                       />
                     </div>
-                    <button className="absolute -bottom-2 -right-2 p-2 bg-purple-600 rounded-xl border-2 border-[#0f071a] shadow-xl">
+                    <label className="absolute -bottom-2 -right-2 p-2 bg-[#c79a3b] rounded-xl border-2 border-[#07382a] shadow-xl cursor-pointer">
                       <Camera className="w-4 h-4 text-white" />
-                    </button>
+                      <input className="sr-only" type="file" aria-label={locale === 'ar' ? 'تغيير الصورة الشخصية' : 'Change avatar'}
+                        accept="image/jpeg,image/png,image/webp" disabled={!authToken || uploading}
+                        onChange={async event => {
+                          const file = event.currentTarget.files?.[0];
+                          event.currentTarget.value = '';
+                          if (!file || !authToken || !authUser || uploading) return;
+                          setUploading(true);
+                          setAvatarStatus('');
+                          try {
+                            const { avatarUrl } = await businessApi.uploadAvatar(authToken, file);
+                            setAuthUser(user => user?.id === authUser.id ? { ...user, avatarUrl } : user);
+                            await reloadDiscovery();
+                            setAvatarStatus(locale === 'ar' ? 'تم حفظ الصورة' : 'Avatar saved');
+                          } catch {
+                            setAvatarStatus(locale === 'ar' ? 'تعذر حفظ الصورة. اختر صورة JPEG أو PNG أو WebP حتى 5 ميغابايت.' : 'Could not save the avatar. Try a JPEG, PNG or WebP image up to 5 MB.');
+                          } finally {
+                            setUploading(false);
+                          }
+                        }} />
+                    </label>
                   </div>
+                  <p role="status">{uploading ? (locale === 'ar' ? 'جارٍ الرفع…' : 'Uploading…') : avatarStatus}</p>
                   <div className="w-full space-y-4">
                     <div className="space-y-2">
                       <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] px-2">Nickname</p>
                       <input 
                         type="text" 
                         defaultValue="Alex"
-                        className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-purple-500/50 outline-none transition-all"
+                        className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-[#c79a3b]/50 outline-none transition-all"
                       />
                     </div>
                     <div className="space-y-2">
                       <p className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] px-2">Bio</p>
                       <textarea 
                         defaultValue="Gaming is life! 🎮"
-                        className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-purple-500/50 outline-none transition-all h-32 resize-none"
+                        className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-[#c79a3b]/50 outline-none transition-all h-32 resize-none"
                       />
                     </div>
-                    <button className="w-full py-5 bg-purple-600 rounded-2xl font-black text-white shadow-[0_0_40px_rgba(168,85,247,0.4)] active:scale-95 transition-all uppercase tracking-widest text-xs mt-4">
+                    <button className="w-full py-5 bg-[#c79a3b] rounded-2xl font-black text-white shadow-sm active:scale-95 transition-all uppercase tracking-widest text-xs mt-4">
                       Save Changes
                     </button>
                   </div>

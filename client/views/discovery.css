@@ -28,3 +28,9 @@
 .discovery-nav button { color:#efd9a0; }
 .discovery-nav button :is(span,svg) { color:inherit; }
 .discovery-nav button span:first-child { background:transparent; box-shadow:none; }
+.companion-profile { background:#07382a; color:#fff9ed; font-family:'IBM Plex Sans Arabic',sans-serif; }
+.companion-profile h1,.companion-profile h2,.companion-profile h3 { color:#efd9a0; font-family:Cairo,sans-serif; }
+.companion-profile .profile-surface { background:#0b4a38; border:1px solid #c79a3b80; border-radius:18px; }
+.companion-profile .profile-hero { background:radial-gradient(ellipse at 85% 10%, #0b6b4f 0%, #07382a 72%); border-block-start:3px solid #c79a3b; }
+.companion-profile :is(.text-gray-500,.text-gray-600,.text-gray-400) { color:#e0cda5; }
+.companion-profile :is(button,a):focus-visible { outline:2px solid #efd9a0; outline-offset:3px; }

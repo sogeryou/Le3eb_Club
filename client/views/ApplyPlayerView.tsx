@@ -1,3 +1,4 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
   Search, 
@@ -262,7 +263,7 @@ const {
                                     }`}
                                   >
                                     <div className="w-12 h-12 rounded-xl overflow-hidden shadow-2xl shrink-0">
-                                      <img src={game.imageUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                      <ResilientImage src={game.imageUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                     </div>
                                     <div className="flex-1 text-left">
                                       <p className={`text-base font-bold transition-colors ${
@@ -401,7 +402,7 @@ const {
                             <div className="space-y-3">
                               {playerApplicationData.screenshots.length > 0 ? (
                                 <div className="w-full aspect-video rounded-2xl overflow-hidden border border-white/10 relative">
-                                  <img src={playerApplicationData.screenshots[0]} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                  <ResilientImage src={playerApplicationData.screenshots[0]} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                   <button 
                                     onClick={() => setPlayerApplicationData(prev => ({ ...prev, screenshots: [] }))}
                                     className="absolute top-4 right-4 p-2 bg-black/50 rounded-xl text-white backdrop-blur-md"
@@ -411,7 +412,7 @@ const {
                                 </div>
                               ) : (
                                 <button 
-                                  onClick={() => setPlayerApplicationData(prev => ({ ...prev, screenshots: ['https://picsum.photos/seed/' + Math.random() + '/1280/720'] }))}
+                                  onClick={() => setPlayerApplicationData(prev => ({ ...prev, screenshots: ['/default-cover.svg'] }))}
                                   className="w-full aspect-video rounded-2xl bg-white/5 border border-dashed border-white/20 flex flex-col items-center justify-center gap-3 text-gray-500 hover:bg-white/10 transition-all"
                                 >
                                   <Camera className="w-8 h-8" />
@@ -557,12 +558,12 @@ const {
                           <div className="space-y-4">
                             <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-2">{t('apply.coverImage')}</p>
                             <button 
-                              onClick={() => setPlayerApplicationData(prev => ({ ...prev, coverUrl: 'https://picsum.photos/seed/cover/800/1200' }))}
+                              onClick={() => setPlayerApplicationData(prev => ({ ...prev, coverUrl: '/default-cover.svg' }))}
                               className="w-full aspect-[3/4] bg-white/5 border border-dashed border-white/20 rounded-[32px] overflow-hidden flex flex-col items-center justify-center gap-3 group relative"
                             >
                               {playerApplicationData.coverUrl ? (
                                 <>
-                                  <img src={playerApplicationData.coverUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                  <ResilientImage src={playerApplicationData.coverUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                   <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                                     <Camera className="w-8 h-8 text-white" />
                                   </div>

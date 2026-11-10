@@ -1,3 +1,4 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
   Search, 
@@ -188,7 +189,7 @@ const {
                             if (epal) navigateTo('PROFILE', epal);
                           }}
                         >
-                          <img 
+                          <ResilientImage kind="avatar"
                             src={post.userAvatar} 
                             alt={post.userName} 
                             className="w-12 h-12 rounded-full object-cover border-2 border-white/10 group-hover:border-purple-500/50 transition-all"
@@ -227,7 +228,7 @@ const {
                         <p className="text-base text-gray-200 leading-relaxed">{post.content}</p>
                         {post.images && post.images.length > 0 && (
                           <div className="rounded-3xl overflow-hidden border border-white/5">
-                            <img 
+                            <ResilientImage
                               src={post.images[0]} 
                               alt="Post content" 
                               className="w-full aspect-video object-cover"

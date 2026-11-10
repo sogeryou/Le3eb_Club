@@ -1,3 +1,4 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
   Search, 
@@ -143,7 +144,7 @@ const {
               className="min-h-screen pb-32"
             >
               <div className="relative h-[35vh] w-full">
-                <img 
+                <ResilientImage
                   src={selectedGame?.imageUrl} 
                   alt={selectedGame?.name} 
                   className="w-full h-full object-cover object-top"
