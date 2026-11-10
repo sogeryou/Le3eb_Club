@@ -1,3 +1,4 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
   Search, 
@@ -208,7 +209,7 @@ const {
                         >
                           <div className="shrink-0">
                             <div className="w-20 h-20 rounded-xl overflow-hidden border border-white/10">
-                              <img src={service.posterUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                              <ResilientImage src={service.posterUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                             </div>
                           </div>
                           <div className="flex-1 flex flex-col justify-between py-0.5">

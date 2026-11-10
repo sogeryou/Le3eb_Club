@@ -1,3 +1,4 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
   Search, 
@@ -139,7 +140,7 @@ const {
   } = useApp();
 
   return (
-    <div className={currentView === 'HOME' ? 'min-h-screen bg-[#f8f1e5] text-[#07382a]' : 'min-h-screen bg-[#0f071a] text-white font-sans selection:bg-purple-500/30'}>
+    <div className={currentView === 'HOME' ? 'min-h-screen bg-[#f8f1e5] text-[#07382a]' : currentView === 'PROFILE' ? 'min-h-screen bg-[#07382a] text-[#fff9ed]' : 'min-h-screen bg-[#0f071a] text-white font-sans selection:bg-purple-500/30'}>
       {/* Header */}
       {['COMMUNITY', 'IM', 'ME', 'COMMUNITY_SELECTOR'].includes(currentView) && (
         <header className="sticky top-0 z-50 bg-[#0f071a]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between">
@@ -306,7 +307,7 @@ const {
                             }}
                             className="flex items-center gap-4 p-2 hover:bg-white/5 transition-all cursor-pointer rounded-xl"
                           >
-                            <img src={epal.avatarUrl} className="w-14 h-14 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
+                            <ResilientImage kind="avatar" src={epal.avatarUrl} className="w-14 h-14 rounded-full object-cover border border-white/10" referrerPolicy="no-referrer" />
                             <div className="flex-1 min-w-0">
                               <h4 className="font-bold text-white truncate">{epal.name}</h4>
                               {session ? (

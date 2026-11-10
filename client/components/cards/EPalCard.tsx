@@ -1,3 +1,4 @@
+import { ResilientImage } from '../ResilientImage';
 import React from 'react';
 import { Star, Play, Gamepad2 } from 'lucide-react';
 import type { EPal } from '@shared/types';
@@ -20,7 +21,7 @@ export const EPalCard: React.FC<{
         className="w-20 h-20 rounded-2xl overflow-hidden border border-white/10 cursor-pointer group-hover:border-purple-500/50 transition-all shadow-lg" 
         onClick={onProfileClick}
       >
-        <img 
+        <ResilientImage kind="avatar"
           src={epal.avatarUrl} 
           alt={epal.name} 
           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
@@ -89,4 +90,4 @@ export const EPalCard: React.FC<{
       </button>
     </div>
   </GlassCard>
-);
+);

@@ -1,3 +1,4 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
   Search, 
@@ -156,7 +157,7 @@ const {
                 <GlassCard className="w-full max-w-xs p-6 space-y-6 pointer-events-auto shadow-2xl border-white/20 bg-[#1a0b2e]/90">
                   <div className="space-y-2 text-center">
                     <div className="w-16 h-16 rounded-2xl overflow-hidden mx-auto border-2 border-purple-500/30">
-                      <img src={epalToUnfollow.avatarUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                      <ResilientImage kind="avatar" src={epalToUnfollow.avatarUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     </div>
                     <h3 className="text-lg font-bold">Unfollow {epalToUnfollow.name}?</h3>
                     <p className="text-xs text-gray-400">Are you sure you want to unfollow this EPal?</p>
@@ -265,7 +266,7 @@ const {
 
                       {/* Game Image at bottom */}
                       <div className="relative aspect-video overflow-hidden group">
-                        <img 
+                        <ResilientImage
                           src={pl.posterUrl} 
                           className="w-full h-full object-cover" 
                           referrerPolicy="no-referrer"
@@ -586,7 +587,7 @@ const {
                         selectedGame?.id === game.id ? 'bg-purple-600/20 border-purple-500/50' : 'bg-white/5 border-white/10'
                       }`}
                     >
-                      <img src={game.imageUrl} className="w-12 h-12 rounded-xl object-cover" referrerPolicy="no-referrer" />
+                      <ResilientImage src={game.imageUrl} className="w-12 h-12 rounded-xl object-cover" referrerPolicy="no-referrer" />
                       <span className="font-bold flex-1 text-left">{game.name}</span>
                       {selectedGame?.id === game.id && <CheckCircle2 className="w-5 h-5 text-purple-400" />}
                     </button>

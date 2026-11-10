@@ -1,6 +1,7 @@
-import { S3Client, PutObjectCommand, HeadBucketCommand } from '@aws-sdk/client-s3';
+import { S3Client, PutObjectCommand, HeadBucketCommand, HeadObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 import { loadEnv } from '../config/env.js';
+import { AVATAR_MAX_BYTES, imageMime, matchesAvatarMime } from './avatarUpload.js';
 
 const IMAGE_MIME = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const VIDEO_MIME = new Set(['video/mp4']);
@@ -10,6 +11,7 @@ export interface SignedUpload {
   key: string;
   maxBytes: number;
   mime: string;
+  headers?: Record<string, string>;
 }
 
 export interface IObjectStore {
@@ -34,10 +36,10 @@ export class S3ObjectStore implements IObjectStore {
     });
   }
 
-  async presignPut(key: string, mime: string, maxBytes: number): Promise<SignedUpload> {
-    const cmd = new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: mime });
-    const url = await getSignedUrl(this.client, cmd, { expiresIn: 900 });
-    return { url, key, maxBytes, mime };
+  async presignPut(key: string, mime: string, maxBytes: number, immutable = false): Promise<SignedUpload> {
+    const cmd = new PutObjectCommand({ Bucket: this.bucket, Key: key, ContentType: mime, IfNoneMatch: immutable ? '*' : undefined });
+    const url = await getSignedUrl(this.client, cmd, { expiresIn: 900, signableHeaders: immutable ? new Set(['content-type', 'if-none-match']) : undefined });
+    return { url, key, maxBytes, mime, ...(immutable ? { headers: { 'If-None-Match': '*' } } : {}) };
   }
 
   async ping() {
@@ -47,6 +49,16 @@ export class S3ObjectStore implements IObjectStore {
     } catch {
       return false;
     }
+  }
+
+  async verifiedAvatarUrl(key: string) {
+    const base = loadEnv().S3_PUBLIC_BASE_URL;
+    if (!base || new URL(base).protocol !== 'https:') return null;
+    const head = await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: key }));
+    if (!head.ContentLength || head.ContentLength > AVATAR_MAX_BYTES || !matchesAvatarMime(key, head.ContentType)) return null;
+    const part = await this.client.send(new GetObjectCommand({ Bucket: this.bucket, Key: key, Range: 'bytes=0-11', IfMatch: head.ETag }));
+    if (!part.Body || imageMime(await part.Body.transformToByteArray()) !== head.ContentType) return null;
+    return `${base.replace(/\/+$/, '')}/${key}`;
   }
 }
 

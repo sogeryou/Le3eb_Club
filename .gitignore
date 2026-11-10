@@ -24,6 +24,7 @@ test-results/
 # Local / scratch (do not publish)
 data/storage.json
 backend/data/storage.json
+backend/data/avatars/
 backend/data/storage.legacy.json
 keys.txt
 tmp_*.docx

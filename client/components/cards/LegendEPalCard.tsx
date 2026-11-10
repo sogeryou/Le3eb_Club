@@ -1,3 +1,4 @@
+import { ResilientImage } from '../ResilientImage';
 import React from 'react';
 import { Star, Play } from 'lucide-react';
 import type { EPal } from '@shared/types';
@@ -66,7 +67,7 @@ export const LegendEPalCard: React.FC<{
     return (
       <div className={`flex flex-col gap-3 ${className}`} onClick={onProfileClick}>
         <div className="relative aspect-square rounded-[32px] overflow-hidden group shadow-2xl border border-white/5">
-          <img 
+          <ResilientImage kind="avatar"
             src={epal.avatarUrl} 
             alt={epal.name} 
             className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
@@ -102,7 +103,7 @@ export const LegendEPalCard: React.FC<{
       onClick={onProfileClick}
     >
       {/* Background Image */}
-      <img 
+      <ResilientImage kind="avatar"
         src={epal.avatarUrl} 
         alt={epal.name} 
         className="absolute inset-0 w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
@@ -115,4 +116,4 @@ export const LegendEPalCard: React.FC<{
       </div>
     </div>
   );
-};
+};

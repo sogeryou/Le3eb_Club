@@ -1,3 +1,4 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
   Search, 
@@ -159,7 +160,7 @@ const {
                     if (epal) navigateTo('PROFILE', epal);
                   }}
                 >
-                  <img 
+                  <ResilientImage kind="avatar"
                     src={selectedPost.userAvatar} 
                     alt={selectedPost.userName} 
                     className="w-12 h-12 rounded-full object-cover border border-white/10 group-hover:border-purple-500/50 transition-all"
@@ -176,7 +177,7 @@ const {
                 <p className="text-base text-gray-200 leading-relaxed">{selectedPost.content}</p>
                 {selectedPost.images && selectedPost.images.length > 0 && (
                   <div className="rounded-3xl overflow-hidden border border-white/5 bg-white/5">
-                    <img 
+                    <ResilientImage
                       src={selectedPost.images[0]} 
                       alt="Post content" 
                       className="w-full max-h-[60vh] object-contain bg-black/20"
@@ -233,7 +234,7 @@ const {
                           <div key={service.id} className="min-w-[200px]">
                             <GlassCard className="p-2 flex flex-col gap-2">
                               <div className="relative aspect-video rounded-lg overflow-hidden">
-                                <img src={service.posterUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                                <ResilientImage src={service.posterUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                                 <div className="absolute top-1.5 right-1.5 px-1.5 py-0.5 bg-black/40 backdrop-blur-md rounded-md border border-white/10 flex items-center gap-1">
                                   <Star className="w-2.5 h-2.5 text-yellow-500 fill-current" />
                                   <span className="text-[9px] font-bold text-white">{service.rating.toFixed(1)}</span>
@@ -275,7 +276,7 @@ const {
                             if (epal) navigateTo('PROFILE', epal);
                           }}
                         >
-                          <img 
+                          <ResilientImage kind="avatar"
                             src={comment.userAvatar} 
                             className="w-10 h-10 rounded-full object-cover border border-white/10 group-hover:border-purple-500/50 transition-all" 
                             referrerPolicy="no-referrer"

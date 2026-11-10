@@ -1,3 +1,4 @@
+import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
   Search, 
@@ -69,7 +70,6 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 import { Category, Game, EPal, EPalServiceVariant, Coupon, Playlink, Post, Message, ChatSession, IMOrder, Wallet as WalletType, RechargePackage, WalletTransaction, RechargeOrder } from '@shared/types';
 import { PRODUCT_SEMVER } from '../constants';
-import { GlassCard } from '../components/ui/GlassCard';
 import { IconButton } from '../components/ui/IconButton';
 import { WaveAnimation } from '../components/ui/WaveAnimation';
 import { CoinIcon } from '../components/ui/CoinIcon';
@@ -146,16 +146,9 @@ const {
               initial={{ opacity: 0, y: 50 }}
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: 50 }}
-              className="space-y-0"
+              className="companion-profile space-y-0"
             >
-              <div className="relative h-[35vh]">
-                <img 
-                  src={selectedEPal.avatarUrl} onError={e => { if (e.currentTarget.getAttribute('src') !== '/default-companion.svg') e.currentTarget.src = '/default-companion.svg'; }}
-                  alt={selectedEPal.name} 
-                  className="w-full h-full object-cover object-top"
-                  referrerPolicy="no-referrer"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#0f071a] via-transparent to-black/40" />
+              <div className="profile-hero relative h-[24vh]">
                 
                 {/* Back Button */}
                 <button 
@@ -168,18 +161,18 @@ const {
               
               <div className="px-6 -mt-12 relative z-10 space-y-6">
                 {/* Avatar Frame */}
-                <div className="absolute -top-12 left-10 w-24 h-24 rounded-3xl border-4 border-[#0f071a] overflow-hidden shadow-2xl z-30">
-                  <img src={selectedEPal.avatarUrl} onError={e => { if (e.currentTarget.getAttribute('src') !== '/default-companion.svg') e.currentTarget.src = '/default-companion.svg'; }} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+                <div className="absolute -top-12 left-10 w-24 h-24 rounded-3xl border-4 border-[#07382a] overflow-hidden shadow-2xl z-30">
+                  <ResilientImage kind="avatar" src={selectedEPal.avatarUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                 </div>
 
-                <GlassCard className="p-5 pt-16 space-y-3 relative z-20 shadow-2xl">
+                <div className="profile-surface p-5 pt-16 space-y-3 relative z-20 shadow-2xl">
                   {/* Follow Button - Top Right */}
                   <button 
                     onClick={() => selectedEPal && toggleFollow(selectedEPal.id)}
                     className={`absolute top-5 right-5 flex items-center gap-1.5 px-3 py-1.5 rounded-xl active:scale-95 transition-all group ${
                       selectedEPal && followedEPals.has(selectedEPal.id)
                         ? 'bg-white/10 border border-white/20' 
-                        : 'bg-purple-600 shadow-[0_0_20px_rgba(168,85,247,0.4)]'
+                        : 'bg-[#c79a3b] shadow-sm'
                     }`}
                   >
                     <Heart 
@@ -244,10 +237,10 @@ const {
                         )}
                       </div>
                     </div>
-                </GlassCard>
+                </div>
 
                 {/* Profile Tabs */}
-                <div className="flex justify-between items-center px-2 py-4 border-b border-white/5 sticky top-0 bg-[#0f071a]/80 backdrop-blur-xl z-40 -mx-6 px-8">
+                <div className="flex justify-between items-center px-2 py-4 border-b border-white/5 sticky top-0 bg-[#07382a]/80 backdrop-blur-xl z-40 -mx-6 px-8">
                   {[
                     { id: 'Playlink', icon: Play },
                     { id: 'Service', icon: Gamepad2 },
@@ -257,14 +250,14 @@ const {
                     <button
                       key={tab.id}
                       onClick={() => setProfileTab(tab.id as any)}
-                      className={`flex flex-col items-center gap-1.5 transition-all duration-300 relative ${profileTab === tab.id ? 'text-purple-400' : 'text-gray-500 hover:text-gray-300'}`}
+                      className={`flex flex-col items-center gap-1.5 transition-all duration-300 relative ${profileTab === tab.id ? 'text-[#efd9a0]' : 'text-gray-500 hover:text-gray-300'}`}
                     >
                       <tab.icon className={`w-5 h-5 ${profileTab === tab.id ? 'fill-current' : ''}`} />
                       <span className="text-[10px] font-bold uppercase tracking-widest">{tab.id}</span>
                       {profileTab === tab.id && (
                         <motion.div
                           layoutId="activeTab"
-                          className="absolute -bottom-4 left-0 right-0 h-0.5 bg-purple-400 rounded-full"
+                          className="absolute -bottom-4 left-0 right-0 h-0.5 bg-[#efd9a0] rounded-full"
                         />
                       )}
                     </button>
@@ -281,8 +274,8 @@ const {
                             onClick={() => setActiveServiceId(service.id)}
                             className={`flex flex-col items-center gap-2 shrink-0 transition-all duration-300 ${activeServiceId === service.id ? 'opacity-100' : 'opacity-40 hover:opacity-70'}`}
                           >
-                            <div className={`w-20 h-28 rounded-2xl overflow-hidden border-2 transition-all duration-300 ${activeServiceId === service.id ? 'border-purple-400 shadow-[0_0_25px_rgba(168,85,247,0.7)] scale-110' : 'border-white/10'}`}>
-                              <img 
+                            <div className={`w-20 h-28 rounded-2xl overflow-hidden border-2 transition-all duration-300 ${activeServiceId === service.id ? 'border-[#efd9a0] scale-110' : 'border-white/10'}`}>
+                              <ResilientImage
                                 src={service.posterUrl} 
                                 alt={service.name} 
                                 className="w-full h-full object-cover"
@@ -302,7 +295,7 @@ const {
                           const service = selectedEPal.services.find(s => s.id === activeServiceId)!;
                           return (
                             <>
-                              <GlassCard className="p-6 space-y-4">
+                              <div className="profile-surface p-6 space-y-4">
                                 <div className="space-y-4">
                                   <div className="flex justify-between items-start">
                                     <div className="space-y-1.5">
@@ -313,14 +306,14 @@ const {
                                           <span className="text-sm font-bold">{service.rating > 0 ? service.rating.toFixed(1) : (locale === 'ar' ? 'رفيق جديد' : 'New companion')}</span>
                                         </div>
                                         <div className="flex items-center gap-1">
-                                          <CheckCircle2 className="w-4 h-4 text-purple-400" />
+                                          <CheckCircle2 className="w-4 h-4 text-[#efd9a0]" />
                                           <span className="text-sm font-bold">{service.orderCount} Orders</span>
                                         </div>
                                       </div>
                                     </div>
                                     <button 
                                       onClick={(e) => handlePlayToggle(selectedEPal.id, e)}
-                                      className="w-10 h-10 bg-purple-600 border border-purple-500/50 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all shrink-0"
+                                      className="w-10 h-10 bg-[#c79a3b] border border-[#c79a3b]/50 rounded-full flex items-center justify-center shadow-lg active:scale-95 transition-all shrink-0"
                                     >
                                       {playingEPalId === selectedEPal.id ? (
                                         <WaveAnimation color="bg-white" />
@@ -332,7 +325,7 @@ const {
                                 </div>
 
                                 {/* Screenshots */}
-                                <img 
+                                <ResilientImage
                                   src={service.screenshots[0]} 
                                   className="w-full h-36 object-cover rounded-2xl border border-white/10" 
                                   referrerPolicy="no-referrer"
@@ -346,7 +339,7 @@ const {
                                     <div className="space-y-3">
                                       <button 
                                         onClick={() => setShowServiceDetails(!showServiceDetails)}
-                                        className="flex items-center gap-2 text-[10px] font-bold text-purple-400 uppercase tracking-widest hover:text-purple-300 transition-colors"
+                                        className="flex items-center gap-2 text-[10px] font-bold text-[#efd9a0] uppercase tracking-widest hover:text-[#efd9a0] transition-colors"
                                       >
                                         {showServiceDetails ? (
                                           <>
@@ -373,31 +366,31 @@ const {
                                               {service.details.rank && (
                                                 <div className="flex justify-between items-center p-2 bg-white/5 rounded-xl border border-white/10">
                                                   <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Rank</p>
-                                                  <p className="text-xs font-bold text-purple-400">{service.details.rank}</p>
+                                                  <p className="text-xs font-bold text-[#efd9a0]">{service.details.rank}</p>
                                                 </div>
                                               )}
                                               {service.details.server && (
                                                 <div className="flex justify-between items-center p-2 bg-white/5 rounded-xl border border-white/10">
                                                   <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Server</p>
-                                                  <p className="text-xs font-bold text-purple-400">{service.details.server}</p>
+                                                  <p className="text-xs font-bold text-[#efd9a0]">{service.details.server}</p>
                                                 </div>
                                               )}
                                               {service.details.main && (
                                                 <div className="flex justify-between items-center p-2 bg-white/5 rounded-xl border border-white/10">
                                                   <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Main</p>
-                                                  <p className="text-xs font-bold text-purple-400">{service.details.main}</p>
+                                                  <p className="text-xs font-bold text-[#efd9a0]">{service.details.main}</p>
                                                 </div>
                                               )}
                                               {service.details.style && (
                                                 <div className="flex justify-between items-center p-2 bg-white/5 rounded-xl border border-white/10">
                                                   <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Style</p>
-                                                  <p className="text-xs font-bold text-purple-400">{service.details.style}</p>
+                                                  <p className="text-xs font-bold text-[#efd9a0]">{service.details.style}</p>
                                                 </div>
                                               )}
                                               {service.details.platform && (
                                                 <div className="flex justify-between items-center p-2 bg-white/5 rounded-xl border border-white/10">
                                                   <p className="text-[9px] text-gray-500 font-bold uppercase tracking-widest">Platform</p>
-                                                  <p className="text-xs font-bold text-purple-400">{service.details.platform}</p>
+                                                  <p className="text-xs font-bold text-[#efd9a0]">{service.details.platform}</p>
                                                 </div>
                                               )}
                                             </div>
@@ -419,7 +412,7 @@ const {
                                         className="flex justify-between items-center p-2.5 bg-white/5 rounded-xl border border-white/10 hover:bg-white/10 active:scale-[0.98] transition-all text-left"
                                       >
                                         <span className="text-sm font-bold">{v.name}</span>
-                                        <span className="text-purple-400 font-bold flex items-center gap-1">
+                                        <span className="text-[#efd9a0] font-bold flex items-center gap-1">
                                           {v.price} <CoinIcon />
                                           <span className="text-[10px] text-gray-500 uppercase">/ {v.unit}</span>
                                         </span>
@@ -427,7 +420,7 @@ const {
                                     ))}
                                   </div>
                                 </div>
-                              </GlassCard>
+                              </div>
 
                               {/* Reviews Section */}
                               <div className="space-y-6">
@@ -435,16 +428,16 @@ const {
                                   <div className="space-y-1">
                                     <h3 className="text-lg font-bold">User Reviews</h3>
                                     <div className="flex items-center gap-2">
-                                      <div className="flex items-center gap-1 bg-purple-500/20 px-2 py-0.5 rounded-lg border border-purple-500/30">
+                                      <div className="flex items-center gap-1 bg-[#c79a3b]/20 px-2 py-0.5 rounded-lg border border-[#c79a3b]/30">
                                         <Star className="w-3 h-3 text-yellow-500 fill-current" />
-                                        <span className="text-sm font-bold text-purple-400">{selectedEPal.rating > 0 ? selectedEPal.rating.toFixed(1) : (locale === 'ar' ? 'رفيق جديد' : 'New companion')}</span>
+                                        <span className="text-sm font-bold text-[#efd9a0]">{selectedEPal.rating > 0 ? selectedEPal.rating.toFixed(1) : (locale === 'ar' ? 'رفيق جديد' : 'New companion')}</span>
                                       </div>
                                       <span className="text-xs text-gray-500 font-bold">{selectedEPal.reviews?.length ?? 0} {locale === 'ar' ? 'تقييمات' : 'reviews'}</span>
                                     </div>
                                   </div>
                                   <button 
                                     onClick={() => navigateTo('ALL_REVIEWS', { epal: selectedEPal })}
-                                    className="flex items-center gap-1 text-xs font-bold text-purple-400 hover:text-purple-300 transition-colors"
+                                    className="flex items-center gap-1 text-xs font-bold text-[#efd9a0] hover:text-[#efd9a0] transition-colors"
                                   >
                                     View All
                                     <ChevronRight className="w-3 h-3" />
@@ -469,10 +462,10 @@ const {
                                 <div className="space-y-3">
                                   {selectedEPal.reviews?.slice(0, 2).map(review => (
                                     <div key={review.id}>
-                                      <GlassCard className="p-4 space-y-3">
+                                      <div className="profile-surface p-4 space-y-3">
                                         <div className="flex justify-between items-start">
                                           <div className="flex items-center gap-3">
-                                            <img src={review.userAvatar} className="w-10 h-10 rounded-full object-cover" referrerPolicy="no-referrer" />
+                                            <ResilientImage kind="avatar" src={review.userAvatar} className="w-10 h-10 rounded-full object-cover" referrerPolicy="no-referrer" />
                                             <div>
                                               <p className="text-sm font-bold">{review.userName}</p>
                                               <div className="flex gap-0.5">
@@ -485,7 +478,7 @@ const {
                                           <span className="text-[10px] text-gray-600 font-bold">{review.date}</span>
                                         </div>
                                         <p className="text-sm text-gray-400 italic">"{review.comment}"</p>
-                                      </GlassCard>
+                                      </div>
                                     </div>
                                   ))}
                                 </div>
@@ -509,7 +502,7 @@ const {
                         }}
                         className="relative aspect-[16/6] rounded-2xl overflow-hidden group active:scale-[0.98] transition-all border border-white/5"
                       >
-                        <img 
+                        <ResilientImage
                           src={pl.posterUrl} 
                           className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
                           referrerPolicy="no-referrer"
@@ -519,7 +512,7 @@ const {
                         
                         <div className="absolute top-4 left-4 right-4 flex justify-between items-start">
                           <div className="space-y-1 text-left">
-                            <span className="text-[10px] font-bold text-purple-400 uppercase tracking-widest bg-purple-500/10 backdrop-blur-md px-2 py-0.5 rounded border border-purple-500/20">
+                            <span className="text-[10px] font-bold text-[#efd9a0] uppercase tracking-widest bg-[#c79a3b]/10 backdrop-blur-md px-2 py-0.5 rounded border border-[#c79a3b]/20">
                               {pl.gameName}
                             </span>
                             <h3 className="text-lg font-black text-white tracking-tight uppercase">{pl.nickname}</h3>
@@ -547,10 +540,11 @@ const {
 
                 {profileTab === 'Album' && (
                   <div className="grid grid-cols-3 gap-2 pt-4">
-                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                    {!(selectedEPal.album?.length) && <p className="col-span-full p-6" role="status">{locale === 'ar' ? 'لا توجد صور بعد.' : 'No photos yet.'}</p>}
+                    {selectedEPal.album?.map((photo, i) => (
                       <div key={i} className="aspect-square rounded-xl bg-white/5 border border-white/5 overflow-hidden">
-                        <img 
-                          src={`https://picsum.photos/seed/${selectedEPal.id}${i}/400/400`} 
+                        <ResilientImage
+                          src={photo}
                           className="w-full h-full object-cover opacity-50 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-500"
                           referrerPolicy="no-referrer"
                         />
@@ -579,9 +573,9 @@ const {
                           onClick={() => navigateTo('POST_DETAIL', { post })}
                           className="w-full text-left"
                         >
-                          <GlassCard className="p-4 space-y-4 hover:bg-white/10 transition-colors">
+                          <div className="profile-surface p-4 space-y-4 hover:bg-white/10 transition-colors">
                             <div className="flex items-center gap-3">
-                              <img src={post.userAvatar} className="w-8 h-8 rounded-full object-cover" />
+                              <ResilientImage kind="avatar" src={post.userAvatar} className="w-8 h-8 rounded-full object-cover" />
                               <div>
                                 <p className="text-xs font-bold">{post.userName}</p>
                                 <p className="text-[10px] text-gray-500">{new Date(post.timestamp).toLocaleDateString()}</p>
@@ -592,12 +586,12 @@ const {
                               <div className={`grid ${post.images.length > 1 ? 'grid-cols-2' : 'grid-cols-1'} gap-2`}>
                                 {post.images.slice(0, 2).map((img, idx) => (
                                   <div key={idx} className="aspect-video rounded-xl bg-white/5 overflow-hidden">
-                                    <img src={img} className="w-full h-full object-cover opacity-80" referrerPolicy="no-referrer" />
+                                    <ResilientImage src={img} className="w-full h-full object-cover opacity-80" referrerPolicy="no-referrer" />
                                   </div>
                                 ))}
                               </div>
                             )}
-                          </GlassCard>
+                          </div>
                         </button>
                       ));
                     })()}
@@ -610,13 +604,13 @@ const {
                 <div className="flex gap-4 max-w-md mx-auto pointer-events-auto">
                   <button 
                     onClick={() => selectedEPal && navigateTo('IM_DETAIL', selectedEPal)}
-                    className="flex-1 py-4 rounded-2xl bg-[#1a0b2e]/90 backdrop-blur-xl border border-white/10 font-bold flex items-center justify-center gap-3 text-white shadow-2xl active:scale-95 transition-all"
+                    className="flex-1 py-4 rounded-2xl bg-[#0b4a38]/90 backdrop-blur-xl border border-white/10 font-bold flex items-center justify-center gap-3 text-[#fff9ed] shadow-2xl active:scale-95 transition-all"
                   >
-                    <MessageSquare className="w-5 h-5 text-purple-400" /> Chat
+                    <MessageSquare className="w-5 h-5 text-[#efd9a0]" /> Chat
                   </button>
                   <button 
                     onClick={() => selectedEPal && navigateTo('ORDER_CONFIRM', { epal: selectedEPal })}
-                    className="flex-1 py-4 rounded-2xl bg-purple-600 font-bold shadow-[0_0_30px_rgba(168,85,247,0.4)] active:scale-95 transition-all flex items-center justify-center gap-3 text-white"
+                    className="flex-1 py-4 rounded-2xl bg-[#c79a3b] font-bold shadow-sm active:scale-95 transition-all flex items-center justify-center gap-3 text-[#07382a]"
                   >
                     <Play className="w-5 h-5 fill-current" /> Play
                   </button>

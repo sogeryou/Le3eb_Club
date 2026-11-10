@@ -1,3 +1,4 @@
+import { ResilientImage } from '../ResilientImage';
 import React from 'react';
 import { Star } from 'lucide-react';
 import type { Game } from '@shared/types';
@@ -12,7 +13,7 @@ export const GameGridItem: React.FC<{
     onClick={onClick}
     className="relative aspect-square rounded-xl overflow-hidden group cursor-pointer border border-white/5"
   >
-    <img 
+    <ResilientImage
       src={game.imageUrl} 
       alt={game.name} 
       className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500"
@@ -31,4 +32,4 @@ export const GameGridItem: React.FC<{
       />
     </button>
   </div>
-);
+);
