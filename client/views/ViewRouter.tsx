@@ -55,7 +55,7 @@ export function ViewRouter() {
         {currentView === 'ALL_REVIEWS' && selectedEPal && <ViewGate><AllReviewsView /></ViewGate>}
         {currentView === 'IM' && <ViewGate><ImView /></ViewGate>}
         {currentView === 'CONTACTS' && <ViewGate><ContactsView /></ViewGate>}
-        {currentView === 'IM_DETAIL' && selectedEPal && <ViewGate><ImDetailView /></ViewGate>}
+        {currentView === 'IM_DETAIL' && <ViewGate><ImDetailView /></ViewGate>}
         {currentView === 'ME' && <ViewGate><MeView /></ViewGate>}
         {currentView === 'MY_ORDERS' && <ViewGate><MyOrdersView /></ViewGate>}
         {currentView === 'RECHARGE' && <ViewGate><RechargeRouteView /></ViewGate>}

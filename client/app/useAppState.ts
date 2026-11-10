@@ -559,6 +559,7 @@ export function useAppState() {
   const [showPlatformSelectorModal, setShowPlatformSelectorModal] = useState(false);
   const [isImSearchExpanded, setIsImSearchExpanded] = useState(false);
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
+  const [chatTarget, setChatTarget] = useState<{ companionId: string } | { orderId: string } | { conversationId: string } | null>(null);
   const [imOrders, setImOrders] = useState<IMOrder[]>([]);
   const [showOngoingOrderWarning, setShowOngoingOrderWarning] = useState(false);
   const [currentMessages, setCurrentMessages] = useState<Message[]>([]);
@@ -767,8 +768,9 @@ export function useAppState() {
     }
 
     if (view === 'IM_DETAIL') {
-      setSelectedEPal(data);
-      setCurrentMessages([]);
+      if (!data) return;
+      setChatTarget(data.conversationId ? { conversationId: data.conversationId }
+        : data.orderId ? { orderId: data.orderId } : { companionId: data.companionId || data.id });
     }
     
     if (view === 'HOME' || view === 'ME' || view === 'COMMUNITY' || view === 'IM') {
@@ -910,7 +912,7 @@ export function useAppState() {
     epalSortBy, setEpalSortBy, epalFilters, setEpalFilters, showEpalFilterModal, setShowEpalFilterModal,
     showRankSelectorModal, setShowRankSelectorModal, showServerSelectorModal, setShowServerSelectorModal,
     showPlatformSelectorModal, setShowPlatformSelectorModal, isImSearchExpanded, setIsImSearchExpanded,
-    chatSessions, setChatSessions, imOrders, setImOrders, showOngoingOrderWarning, setShowOngoingOrderWarning,
+    chatSessions, setChatSessions, chatTarget, imOrders, setImOrders, showOngoingOrderWarning, setShowOngoingOrderWarning,
     currentMessages, setCurrentMessages, messageInput, setMessageInput, selectedOrder, setSelectedOrder,
     showOrderDetailModal, setShowOrderDetailModal, showImServiceCards, setShowImServiceCards,
     showReviewModal, setShowReviewModal, reviewRating, setReviewRating, reviewTags, setReviewTags, reviewFeedback, setReviewFeedback,

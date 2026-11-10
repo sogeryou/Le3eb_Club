@@ -1,4 +1,5 @@
 import type { RechargeOrder, Wallet, WalletTransaction } from '../../shared/types.js';
+import type { DirectMessage } from '../../shared/directMessages.js';
 import type { CouponGrant, CouponTemplate, DeviceBan, ExposureLog, SupportTicket } from '../routes/ops.js';
 
 export type UserRole = 'USER' | 'PLAYER' | 'ADMIN';
@@ -47,6 +48,13 @@ export type ModerationReport = {
 };
 
 export type PersistedState = {
+  conversations: {
+    id: string;
+    participants: [string, string];
+    messages: (DirectMessage & { clientId?: string })[];
+    readThrough: Record<string, number>;
+    createdAt: number;
+  }[];
   schemaVersion: number;
   rechargeOrders: RechargeOrder[];
   wallets: Record<string, Wallet>;

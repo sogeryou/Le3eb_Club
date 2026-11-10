@@ -736,8 +736,7 @@ const {
                           <button 
                             onClick={() => {
                               setShowOrderDetailModal(false);
-                              const epal = EPALS.find(e => e.id === selectedOrder.epalId);
-                              if (epal) navigateTo('IM_DETAIL', epal);
+                              navigateTo('IM_DETAIL', { orderId: selectedOrder.id });
                             }}
                             className="w-full py-5 bg-purple-600 rounded-2xl font-black text-white shadow-[0_0_40px_rgba(168,85,247,0.4)] active:scale-95 transition-all uppercase tracking-widest text-xs"
                           >
