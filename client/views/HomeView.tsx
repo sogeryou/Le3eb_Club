@@ -2,22 +2,20 @@ import { ResilientImage } from '../components/ResilientImage';
 import React, { useState } from 'react';
 import { Gamepad2, Search } from 'lucide-react';
 import { useApp } from '../app/AppContext';
+import { findCatalogGame, sameGame } from '@shared/games';
 import './discovery.css';
 
-const games = [
-  { name: 'PUBG Mobile', image: 'pubg' }, { name: 'EA FC', image: 'fc' },
-  { name: 'Free Fire', image: 'freefire' }, { name: 'Valorant', image: 'valorant' },
-];
 
 export function HomeView() {
-  const { moreEPals, discoveryStatus, reloadDiscovery, navigateTo, locale, setLocale } = useApp();
+  const { GAMES, moreEPals, discoveryStatus, reloadDiscovery, navigateTo, locale, setLocale } = useApp();
   const [query, setQuery] = useState('');
   const [game, setGame] = useState('');
   const ar = locale === 'ar';
   const label = (arabic: string, english: string) => ar ? arabic : english;
   const term = query.trim().toLowerCase();
-  const visible = moreEPals.filter(p => (!game || p.game.toLowerCase() === game.toLowerCase()) &&
-    [p.id, p.name, p.game].some(value => value.toLowerCase().includes(term)));
+  const queryGame = findCatalogGame(query);
+  const visible = moreEPals.filter(p => (!game || sameGame(p.game, game)) &&
+    ([p.id, p.name, p.game].some(value => value.toLowerCase().includes(term)) || (queryGame && sameGame(p.game, queryGame.id))));
   return (
     <div className="discovery" dir={ar ? 'rtl' : 'ltr'}>
       <header className="discovery-header">
@@ -36,12 +34,14 @@ export function HomeView() {
       <main className="discovery-main">
         <h2>{label('الألعاب', 'Popular games')}</h2>
         <div className="discovery-games">
-          {games.map(({ name, image }) => <button type="button" key={name} aria-pressed={game === name} onClick={() => setGame(game === name ? '' : name)}>
-            <ResilientImage src={`/game-${image}.jpg`} alt="" />
+          {GAMES.map(({ id, name, imageUrl, onlineCompanions }) => <button type="button" key={id} data-game-id={id} aria-pressed={game === id} onClick={() => setGame(game === id ? '' : id)}>
+            <ResilientImage src={imageUrl} alt="" />
             <span><Gamepad2 size={18} /><bdi>{name}</bdi></span>
+            {discoveryStatus === 'ready' && typeof onlineCompanions === 'number' &&
+              <small className="game-online-count" data-online-count={onlineCompanions}>{onlineCompanions} {label('متصل', 'online')}</small>}
           </button>)}
         </div>
-        <h2>{game ? <bdi>{game}</bdi> : label('رفقاء اللعب', 'Gaming companions')}</h2>
+        <h2>{game ? <bdi>{GAMES.find(g => g.id === game)?.name}</bdi> : label('رفقاء اللعب', 'Gaming companions')}</h2>
         {discoveryStatus === 'loading' ? <p role="status" className="discovery-state">{label('جارٍ التحميل…', 'Loading companions…')}</p> :
           discoveryStatus === 'error' ? <div role="alert" className="discovery-state">{label('تعذر تحميل القائمة.', 'Could not load companions.')} <button onClick={() => void reloadDiscovery()}>{label('إعادة المحاولة', 'Retry')}</button></div> :
           !visible.length ? <p role="status" className="discovery-state">{label('لا يوجد رفقاء لعب هنا حالياً.', 'No companions here yet.')}</p> :

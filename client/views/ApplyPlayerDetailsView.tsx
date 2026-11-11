@@ -135,7 +135,7 @@ const {
     EPALS, GAMES, POSTS,
     reloadDiscovery, recordCompanionApplication,
   } = useApp();
-  const [gameName, setGameName] = React.useState('PUBG Mobile');
+  const [gameName, setGameName] = React.useState(() => selectedGame?.name ?? GAMES[0].name);
   const [intro, setIntro] = React.useState('');
   const [submitting, setSubmitting] = React.useState(false);
 
@@ -145,7 +145,7 @@ const {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="min-h-screen pb-32 bg-[#0f071a] p-6 space-y-8"
+              className="min-h-screen pb-32 bg-[#07382a] p-6 space-y-8"
             >
               <div className="flex items-center gap-4">
                 <button onClick={handleBack} className="p-2 bg-white/5 rounded-xl border border-white/10">
@@ -156,8 +156,8 @@ const {
 
               <div className="space-y-6">
                 <label className="block">{locale === 'ar' ? 'اللعبة' : 'Game'}
-                  <select className="block bg-[#0f071a] border rounded p-2" value={gameName} onChange={e => setGameName(e.target.value)}>
-                    {['PUBG Mobile', 'EA FC', 'Free Fire', 'Valorant'].map(game => <option key={game}>{game}</option>)}
+                  <select className="block bg-[#07382a] border rounded p-2" value={gameName} onChange={e => setGameName(e.target.value)}>
+                    {GAMES.map(game => <option key={game.id} value={game.name}>{game.name}</option>)}
                   </select>
                 </label>
                 <label className="block">{locale === 'ar' ? 'نبذة عنك' : 'Introduction'}
@@ -170,7 +170,7 @@ const {
                     value={applicationDetails.rank}
                     onChange={(e) => setApplicationDetails(prev => ({ ...prev, rank: e.target.value }))}
                     placeholder={t('apply.detailsRankPlaceholder')}
-                    className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-purple-500/50 outline-none transition-all"
+                    className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-[#c79a3b]/50 outline-none transition-all"
                   />
                 </div>
 
@@ -183,7 +183,7 @@ const {
                         onClick={() => setApplicationDetails(prev => ({ ...prev, platform: p }))}
                         className={`py-3 rounded-xl border text-xs font-bold transition-all ${
                           applicationDetails.platform === p 
-                            ? 'bg-purple-600 border-purple-500 text-white' 
+                            ? 'bg-[#0b6b4f] border-[#c79a3b] text-white'
                             : 'bg-white/5 border-white/10 text-gray-500'
                         }`}
                       >
@@ -200,7 +200,7 @@ const {
                     value={applicationDetails.style}
                     onChange={(e) => setApplicationDetails(prev => ({ ...prev, style: e.target.value }))}
                     placeholder={t('apply.detailsStylePlaceholder')}
-                    className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-purple-500/50 outline-none transition-all"
+                    className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-[#c79a3b]/50 outline-none transition-all"
                   />
                 </div>
 
@@ -213,7 +213,7 @@ const {
                         value={applicationDetails.price}
                         onChange={(e) => setApplicationDetails(prev => ({ ...prev, price: e.target.value }))}
                         placeholder="e.g. 5"
-                        className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-purple-500/50 outline-none transition-all"
+                        className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-[#c79a3b]/50 outline-none transition-all"
                       />
                       <div className="absolute right-5 top-1/2 -translate-y-1/2">
                         <CoinIcon />
@@ -227,7 +227,7 @@ const {
                       value={applicationDetails.discount}
                       onChange={(e) => setApplicationDetails(prev => ({ ...prev, discount: e.target.value }))}
                       placeholder="e.g. 10"
-                      className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-purple-500/50 outline-none transition-all"
+                      className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-[#c79a3b]/50 outline-none transition-all"
                     />
                   </div>
                 </div>
@@ -249,7 +249,7 @@ const {
                     setSubmitting(false);
                   }
                 }}
-                className="w-full py-5 bg-purple-600 rounded-2xl font-black text-white shadow-[0_0_40px_rgba(168,85,247,0.4)] active:scale-95 transition-all uppercase tracking-widest text-xs"
+                className="w-full py-5 bg-[#0b6b4f] rounded-2xl font-black text-white shadow-sm active:scale-95 transition-all uppercase tracking-widest text-xs"
               >
                 {t('apply.detailsSubmit')}
               </button>

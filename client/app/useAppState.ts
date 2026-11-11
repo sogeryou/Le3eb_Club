@@ -3,7 +3,7 @@ import {
   Category, Game, EPal, EPalServiceVariant, Coupon, Playlink, Post, Message, ChatSession, IMOrder,
   Wallet as WalletType, RechargePackage, WalletTransaction,
 } from '@shared/types';
-import { GAMES } from '../constants';
+import { GAMES as BASE_GAMES } from '../constants';
 import { toEPal } from './companionDiscovery';
 const POSTS: import('@shared/types').Post[] = [];
 import { businessApi, type AuthUser, type CompanionProfile, type CompanionRanking } from '../services/businessApi';
@@ -15,6 +15,7 @@ import { useUiStore } from '../stores/uiStore';
 import { resolveOrderContext } from '../lib/resolveOrderContext';
 
 export function useAppState() {
+  const [GAMES, setGames] = useState<Game[]>(BASE_GAMES);
   const deviceId = useDeviceId();
   const { locale, setLocale, t, supportedLocales, getLocaleLabel } = useI18n();
   const [currentView, setCurrentView] = useState<View>('HOME');
@@ -497,7 +498,12 @@ export function useAppState() {
   const reloadDiscovery = useCallback(async () => {
     setDiscoveryStatus('loading');
     try {
-      setMoreEPals((await businessApi.discoverCompanions()).map(toEPal));
+      const [players, games] = await Promise.all([
+        businessApi.discoverCompanions(),
+        businessApi.listGames().catch(() => null),
+      ]);
+      setMoreEPals(players.map(toEPal));
+      setGames(games ?? BASE_GAMES);
       setDiscoveryStatus('ready');
     } catch {
       setMoreEPals([]);
@@ -833,7 +839,7 @@ export function useAppState() {
 
   const allSortedGames = useMemo(() => {
     return [...GAMES].sort((a, b) => a.name.localeCompare(b.name));
-  }, []);
+  }, [GAMES]);
 
 
   // Filter EPals for the Chilling tab

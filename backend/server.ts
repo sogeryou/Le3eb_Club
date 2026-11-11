@@ -51,6 +51,7 @@ import { registerAuthRoutes } from './routes/auth.js';
 import { registerBusinessRoutes } from './routes/business.js';
 import { registerConversationRoutes } from './routes/conversations.js';
 import { buildRechargePackages, moneyConfig, validatePackages } from './policy/moneyConfig.js';
+import { findCatalogGame, resolveStoredGame } from '../shared/games.js';
 import { registerFinanceRoutes } from './routes/finance.js';
 import { registerUploadRoutes } from './routes/uploads.js';
 
@@ -626,7 +627,7 @@ async function startServer() {
     const sortDir = parseSortDir(req.query.sortDir);
     const filtered = companions.filter(item => {
       const matchQ = !q || item.id.toLowerCase().includes(q) || item.gameName.toLowerCase().includes(q);
-      const matchStatus = !status || item.status === status || (status === 'PENDING_REVIEW' && item.status === 'PENDING');
+      const matchStatus = !status || item.status === status || (status === 'PENDING_REVIEW' && (item.status === 'PENDING' || !resolveStoredGame(item.gameName)));
       return matchQ && matchStatus;
     });
     const sorted = sortByKey(filtered, sortBy, sortDir);
@@ -635,6 +636,8 @@ async function startServer() {
       status: companion.status === 'PENDING' ? 'PENDING_REVIEW' : companion.status,
       displayName: getUserById(companion.userId)?.username ?? null,
       avatarUrl: getUserById(companion.userId)?.avatarUrl ?? null,
+      canonicalGameName: resolveStoredGame(companion.gameName)?.name ?? null,
+      gameResolutionRequired: !resolveStoredGame(companion.gameName),
     })), req.query.page, req.query.pageSize, req.query.cursor));
   });
 
@@ -644,6 +647,7 @@ async function startServer() {
     const action = req.body?.action;
     const reason = typeof req.body?.reason === 'string' ? req.body.reason.trim() : '';
     if (action !== 'APPROVE' && action !== 'REJECT') return sendError(res, 400, 'ADMIN_ACTION_REQUIRED', 'Use APPROVE or REJECT');
+    if (action === 'APPROVE' && !resolveStoredGame(companion.gameName)) return sendError(res, 422, 'COMPANION_GAME_REQUIRES_RESOLUTION', 'Select a supported game before approving');
     if (action === 'REJECT' && (!reason || reason.length > 1000)) return sendError(res, 400, 'COMPANION_REJECTION_REASON_REQUIRED', 'Enter a rejection reason (1–1000 characters)');
     if (companion.userId === (req as any).authUserId) return sendError(res, 403, 'COMPANION_SELF_REVIEW', 'You cannot review your own application');
     if (companion.status !== 'PENDING' && companion.status !== 'PENDING_REVIEW') return sendError(res, 409, 'COMPANION_REVIEW_NOT_PENDING', 'Only pending applications can be reviewed');
@@ -655,6 +659,21 @@ async function startServer() {
     if (action === 'APPROVE' && applicant?.role === 'USER') applicant.role = 'PLAYER';
     companion.updatedAt = Date.now();
     appendAuditLog((req as any).authUserId, `COMPANION_${action}`, 'companion', companion.id, { status: companion.status, ...(action === 'REJECT' ? { reason } : {}) });
+    persistState();
+    res.json(companion);
+  });
+
+  app.patch('/api/admin/companions/:id/game', authMiddleware, requireAdmin('COMPANION_REVIEW'), (req, res) => {
+    const companion = companions.find(item => item.id === req.params.id);
+    if (!companion) return sendError(res, 404, 'COMPANION_NOT_FOUND', 'Companion not found');
+    const game = typeof req.body?.gameId === 'string' ? findCatalogGame(req.body.gameId) : undefined;
+    if (!game) return sendError(res, 400, 'COMPANION_GAME_INVALID', 'Select a supported game');
+    const previous = companion.gameName;
+    companion.gameName = game.name;
+    companion.status = 'PENDING_REVIEW';
+    delete companion.rejectionReason;
+    companion.updatedAt = Date.now();
+    appendAuditLog((req as any).authUserId, 'COMPANION_GAME_RESOLVE', 'companion', companion.id, { previous, gameId: game.id, gameName: game.name });
     persistState();
     res.json(companion);
   });

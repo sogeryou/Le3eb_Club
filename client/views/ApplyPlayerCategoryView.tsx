@@ -140,7 +140,7 @@ const {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="min-h-screen pb-32 bg-[#0f071a] p-6 space-y-8"
+              className="min-h-screen pb-32 bg-[#07382a] p-6 space-y-8"
             >
               <div className="flex items-center gap-4">
                 <button onClick={handleBack} className="p-2 bg-white/5 rounded-xl border border-white/10">
@@ -165,7 +165,7 @@ const {
                       }}
                       className={`w-full p-6 rounded-[24px] border transition-all flex items-center justify-between group ${
                         selectedServiceCategory === cat 
-                          ? 'bg-purple-600/20 border-purple-500/50 text-white' 
+                          ? 'bg-[#0b6b4f]/20 border-[#c79a3b]/50 text-white'
                           : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
                       }`}
                     >

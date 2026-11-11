@@ -146,7 +146,7 @@ const {
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
               exit={{ opacity: 0, x: -20 }}
-              className="min-h-screen bg-[#0f071a] flex flex-col"
+              className="min-h-screen bg-[#07382a] flex flex-col"
             >
               <div className="p-6 space-y-6 flex-1 overflow-y-auto pb-40">
                 <div className="flex items-center gap-4">
@@ -165,7 +165,7 @@ const {
                   </button>
                   <div className="flex-1">
                     <h1 className="text-xl font-bold">{t('me.becomePlayer')}</h1>
-                    <p className="text-[10px] text-purple-400 font-black uppercase tracking-widest">{t('apply.stepOf', { current: playerApplicationStep, total: 4 })}</p>
+                    <p className="text-[10px] text-[#c79a3b] font-black uppercase tracking-widest">{t('apply.stepOf', { current: playerApplicationStep, total: 4 })}</p>
                   </div>
                 </div>
 
@@ -183,7 +183,7 @@ const {
                     <div 
                       key={step}
                       className={`flex-1 rounded-full transition-all duration-500 ${
-                        step <= playerApplicationStep ? 'bg-purple-600 shadow-[0_0_10px_rgba(168,85,247,0.5)]' : 'bg-white/10'
+                        step <= playerApplicationStep ? 'bg-[#0b6b4f] shadow-sm' : 'bg-white/10'
                       }`}
                     />
                   ))}
@@ -191,8 +191,8 @@ const {
 
                 {playerApplicationStatus === 'PENDING' ? (
                   <div className="flex-1 flex flex-col items-center justify-center py-20 space-y-6 text-center">
-                    <div className="w-24 h-24 rounded-[40px] bg-purple-600/10 border border-purple-500/20 flex items-center justify-center">
-                      <History className="w-12 h-12 text-purple-400 animate-spin-slow" />
+                    <div className="w-24 h-24 rounded-[40px] bg-[#0b6b4f]/10 border border-[#c79a3b]/20 flex items-center justify-center">
+                      <History className="w-12 h-12 text-[#c79a3b] animate-spin-slow" />
                     </div>
                     <div className="space-y-2">
                       <h2 className="text-2xl font-black text-white">{t('apply.pendingTitle')}</h2>
@@ -224,7 +224,7 @@ const {
                             placeholder={t('apply.searchGamesPlaceholder')}
                             value={applyGameSearchQuery}
                             onChange={(e) => setApplyGameSearchQuery(e.target.value)}
-                            className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-purple-500/50 outline-none transition-all"
+                            className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-[#c79a3b]/50 outline-none transition-all"
                           />
                         </div>
 
@@ -237,7 +237,7 @@ const {
                               key={tab.id}
                               onClick={() => setSelectedApplyGameCategory(tab.id)}
                               className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                                selectedApplyGameCategory === tab.id ? 'bg-purple-600 text-white shadow-[0_0_20px_rgba(168,85,247,0.3)]' : 'text-gray-500 hover:text-gray-300'
+                                selectedApplyGameCategory === tab.id ? 'bg-[#0b6b4f] text-white shadow-sm' : 'text-gray-500 hover:text-gray-300'
                               }`}
                             >
                               {tab.label}
@@ -262,9 +262,9 @@ const {
                           .sort(([a], [b]) => a.localeCompare(b))
                           .map(([letter, games]) => (
                             <div key={letter} className="space-y-2">
-                              <p className="text-[10px] font-black text-purple-400 uppercase tracking-widest px-2">{letter}</p>
+                              <p className="text-[10px] font-black text-[#c79a3b] uppercase tracking-widest px-2">{letter}</p>
                               <div className="space-y-1">
-                                {games.sort((a, b) => a.name.localeCompare(b.name)).map(game => (
+                                {(games as Game[]).sort((a, b) => a.name.localeCompare(b.name)).map(game => (
                                   <button
                                     key={game.id}
                                     onClick={() => {
@@ -272,7 +272,7 @@ const {
                                     }}
                                     className={`w-full py-4 px-4 flex items-center gap-4 rounded-2xl border transition-all group ${
                                       playerApplicationData.gameId === game.id 
-                                        ? 'bg-purple-600/20 border-purple-500/50' 
+                                        ? 'bg-[#0b6b4f]/20 border-[#c79a3b]/50'
                                         : 'bg-transparent border-transparent hover:bg-white/5'
                                     }`}
                                   >
@@ -285,7 +285,7 @@ const {
                                       }`}>{game.name}</p>
                                     </div>
                                     {playerApplicationData.gameId === game.id && (
-                                      <CheckCircle2 className="w-5 h-5 text-purple-400" />
+                                      <CheckCircle2 className="w-5 h-5 text-[#c79a3b]" />
                                     )}
                                   </button>
                                 ))}
@@ -396,7 +396,7 @@ const {
                               placeholder={t('apply.stylePlaceholder')}
                               value={playerApplicationData.style}
                               onChange={(e) => setPlayerApplicationData(prev => ({ ...prev, style: e.target.value }))}
-                              className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-purple-500/50 outline-none transition-all"
+                              className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-[#c79a3b]/50 outline-none transition-all"
                             />
                           </div>
 
@@ -407,7 +407,7 @@ const {
                               rows={4}
                               value={playerApplicationData.intro}
                               onChange={(e) => setPlayerApplicationData(prev => ({ ...prev, intro: e.target.value }))}
-                              className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-purple-500/50 outline-none transition-all resize-none"
+                              className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-[#c79a3b]/50 outline-none transition-all resize-none"
                             />
                           </div>
 
@@ -451,11 +451,11 @@ const {
                           <div className="space-y-4">
                             <p className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-2">{t('apply.voiceRecording')}</p>
                             <div className="p-8 bg-white/5 border border-white/10 rounded-[32px] flex flex-col items-center gap-6">
-                              <div className="w-20 h-20 rounded-full bg-purple-600/20 flex items-center justify-center relative">
+                              <div className="w-20 h-20 rounded-full bg-[#0b6b4f]/20 flex items-center justify-center relative">
                                 {isRecording && (
-                                  <div className="absolute inset-0 rounded-full bg-purple-600 animate-ping opacity-20" />
+                                  <div className="absolute inset-0 rounded-full bg-[#0b6b4f] animate-ping opacity-20" />
                                 )}
-                                <Mic2 className={`w-8 h-8 ${isRecording ? 'text-white' : 'text-purple-400'}`} />
+                                <Mic2 className={`w-8 h-8 ${isRecording ? 'text-white' : 'text-[#c79a3b]'}`} />
                               </div>
                               
                               <div className="text-center space-y-1">
@@ -470,7 +470,7 @@ const {
                                           key={i}
                                           animate={{ height: [4, 12, 4] }}
                                           transition={{ repeat: Infinity, duration: 0.5, delay: i * 0.1 }}
-                                          className="w-1 bg-purple-500 rounded-full"
+                                          className="w-1 bg-[#c79a3b] rounded-full"
                                         />
                                       ))}
                                     </div>
@@ -504,7 +504,7 @@ const {
                                       }, 1000);
                                       (window as any).recordingTimer = timer;
                                     }}
-                                    className="w-full py-4 bg-purple-600 rounded-2xl font-black text-white text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"
+                                    className="w-full py-4 bg-[#0b6b4f] rounded-2xl font-black text-white text-xs uppercase tracking-widest shadow-lg active:scale-95 transition-all"
                                   >
                                     {t('apply.startRecording')}
                                   </button>
@@ -555,7 +555,7 @@ const {
                                         }, 1000);
                                         (window as any).recordingTimer = timer;
                                       }}
-                                      className="flex-1 py-4 bg-white/5 border border-white/10 rounded-2xl font-black text-purple-400 text-[10px] uppercase tracking-widest active:scale-95 transition-all"
+                                      className="flex-1 py-4 bg-white/5 border border-white/10 rounded-2xl font-black text-[#c79a3b] text-[10px] uppercase tracking-widest active:scale-95 transition-all"
                                     >
                                       {t('apply.reRecord')}
                                     </button>
@@ -603,7 +603,7 @@ const {
                               placeholder={t('apply.coverIntroPlaceholder')}
                               value={playerApplicationData.coverIntro}
                               onChange={(e) => setPlayerApplicationData(prev => ({ ...prev, coverIntro: e.target.value }))}
-                              className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-purple-500/50 outline-none transition-all"
+                              className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-[#c79a3b]/50 outline-none transition-all"
                             />
                           </div>
                         </div>
@@ -626,7 +626,7 @@ const {
                               placeholder={t('apply.serviceNamePlaceholder')}
                               value={playerApplicationData.serviceName}
                               onChange={(e) => setPlayerApplicationData(prev => ({ ...prev, serviceName: e.target.value }))}
-                              className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-purple-500/50 outline-none transition-all"
+                              className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-[#c79a3b]/50 outline-none transition-all"
                             />
                           </div>
 
@@ -638,7 +638,7 @@ const {
                                 placeholder="0"
                                 value={playerApplicationData.price || ''}
                                 onChange={(e) => setPlayerApplicationData(prev => ({ ...prev, price: Number(e.target.value) }))}
-                                className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-purple-500/50 outline-none transition-all"
+                                className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-[#c79a3b]/50 outline-none transition-all"
                               />
                             </div>
                             <div className="space-y-3">
@@ -646,7 +646,7 @@ const {
                               <select 
                                 value={playerApplicationData.unit}
                                 onChange={(e) => setPlayerApplicationData(prev => ({ ...prev, unit: e.target.value }))}
-                                className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-purple-500/50 outline-none transition-all appearance-none"
+                                className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-[#c79a3b]/50 outline-none transition-all appearance-none"
                               >
                                 <option value="Game">{t('apply.unitPerGame')}</option>
                                 <option value="Hour">{t('apply.unitPerHour')}</option>
@@ -664,7 +664,7 @@ const {
                                   promotion: { ...prev.promotion, type: prev.promotion.type === 'NONE' ? 'DISCOUNT' : 'NONE' } 
                                 }))}
                                 className={`text-[10px] font-black uppercase tracking-widest transition-all ${
-                                  playerApplicationData.promotion.type !== 'NONE' ? 'text-purple-400' : 'text-gray-600'
+                                  playerApplicationData.promotion.type !== 'NONE' ? 'text-[#c79a3b]' : 'text-gray-600'
                                 }`}
                               >
                                 {playerApplicationData.promotion.type !== 'NONE' ? 'Remove' : 'Add'}
@@ -692,7 +692,7 @@ const {
                                           promotion: { ...prev.promotion, type: type.id as any } 
                                         }))}
                                         className={`p-4 rounded-2xl text-left border transition-all ${
-                                          playerApplicationData.promotion.type === type.id ? 'bg-purple-600/20 border-purple-500/50 text-white' : 'bg-white/5 border-white/10 text-gray-500'
+                                          playerApplicationData.promotion.type === type.id ? 'bg-[#0b6b4f]/20 border-[#c79a3b]/50 text-white' : 'bg-white/5 border-white/10 text-gray-500'
                                         }`}
                                       >
                                         <p className="text-xs font-bold">{type.label}</p>
@@ -717,7 +717,7 @@ const {
                                             ...prev, 
                                             promotion: { ...prev.promotion, buyX: Number(e.target.value) } 
                                           }))}
-                                          className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-purple-500/50 outline-none transition-all"
+                                          className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-[#c79a3b]/50 outline-none transition-all"
                                         />
                                       </div>
                                       <div className="pt-6 text-gray-500 font-black">GET</div>
@@ -731,7 +731,7 @@ const {
                                             ...prev, 
                                             promotion: { ...prev.promotion, getY: Number(e.target.value) } 
                                           }))}
-                                          className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-purple-500/50 outline-none transition-all"
+                                          className="w-full p-4 bg-white/5 border border-white/10 rounded-2xl text-white font-bold focus:border-[#c79a3b]/50 outline-none transition-all"
                                         />
                                       </div>
                                     </div>
@@ -744,7 +744,7 @@ const {
                                         ...prev, 
                                         promotion: { ...prev.promotion, value: Number(e.target.value) } 
                                       }))}
-                                      className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-purple-500/50 outline-none transition-all"
+                                      className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-[#c79a3b]/50 outline-none transition-all"
                                     />
                                   )}
                                 </div>
@@ -764,7 +764,7 @@ const {
                                           promotion: { ...prev.promotion, limitType: limit.id as any } 
                                         }))}
                                         className={`flex-1 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest border transition-all ${
-                                          playerApplicationData.promotion.limitType === limit.id ? 'bg-purple-600 border-purple-500 text-white' : 'bg-white/5 border-white/10 text-gray-500'
+                                          playerApplicationData.promotion.limitType === limit.id ? 'bg-[#0b6b4f] border-[#c79a3b] text-white' : 'bg-white/5 border-white/10 text-gray-500'
                                         }`}
                                       >
                                         {limit.label}
@@ -784,7 +784,7 @@ const {
                                         ...prev, 
                                         promotion: { ...prev.promotion, limitValue: Number(e.target.value) } 
                                       }))}
-                                      className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-purple-500/50 outline-none transition-all"
+                                      className="w-full p-5 bg-white/5 border border-white/10 rounded-2xl text-white font-bold placeholder:text-gray-600 focus:border-[#c79a3b]/50 outline-none transition-all"
                                     />
                                   )}
                                 </div>
@@ -800,7 +800,7 @@ const {
 
               {/* Fixed Footer */}
               {playerApplicationStatus !== 'PENDING' && (
-                <div className="fixed bottom-0 left-0 right-0 p-6 bg-[#0f071a]/80 backdrop-blur-xl border-t border-white/10 z-50">
+                <div className="fixed bottom-0 left-0 right-0 p-6 bg-[#07382a]/80 backdrop-blur-xl border-t border-white/10 z-50">
                   {playerApplicationStep < 4 ? (
                     <button 
                       onClick={() => setPlayerApplicationStep(prev => prev + 1)}
@@ -821,7 +821,7 @@ const {
                         }
                         return false;
                       })()}
-                      className="w-full py-5 bg-purple-600 rounded-2xl font-black text-white shadow-[0_0_40px_rgba(168,85,247,0.4)] active:scale-95 disabled:opacity-50 disabled:active:scale-100 transition-all uppercase tracking-widest text-xs"
+                      className="w-full py-5 bg-[#0b6b4f] rounded-2xl font-black text-white shadow-sm active:scale-95 disabled:opacity-50 disabled:active:scale-100 transition-all uppercase tracking-widest text-xs"
                     >
                       {t('apply.nextStep')}
                     </button>
@@ -830,7 +830,7 @@ const {
                       onClick={async () => {
                         const game = GAMES.find(g => g.id === playerApplicationData.gameId);
                         if (!authToken || !game || submitting) return;
-                        const gameName = game.id === 'pubg' ? 'PUBG Mobile' : game.id === 'val' ? 'Valorant' : game.name;
+                        const gameName = game.name;
                         setSubmitting(true);
                         setSubmitError('');
                         try {
@@ -855,7 +855,7 @@ const {
                         }
                         return false;
                       })()}
-                      className="w-full py-5 bg-purple-600 rounded-2xl font-black text-white shadow-[0_0_40px_rgba(168,85,247,0.4)] active:scale-95 disabled:opacity-50 disabled:active:scale-100 transition-all uppercase tracking-widest text-xs"
+                      className="w-full py-5 bg-[#0b6b4f] rounded-2xl font-black text-white shadow-sm active:scale-95 disabled:opacity-50 disabled:active:scale-100 transition-all uppercase tracking-widest text-xs"
                     >
                       {t('apply.submitApplication')}
                     </button>
@@ -913,7 +913,7 @@ const {
                             (showApplySelectionModal.type === 'MAIN' && playerApplicationData.mainPosition === option) ||
                             (showApplySelectionModal.type === 'SERVER' && playerApplicationData.server === option) ||
                             (showApplySelectionModal.type === 'PLATFORM' && playerApplicationData.platform === option)
-                              ? 'bg-purple-600 border-purple-500 text-white shadow-[0_0_20px_rgba(168,85,247,0.3)]'
+                              ? 'bg-[#0b6b4f] border-[#c79a3b] text-white shadow-sm'
                               : 'bg-white/5 border-white/10 text-gray-400 hover:bg-white/10'
                           }`}
                         >
