@@ -1,5 +1,6 @@
 import type { RechargeOrder, Wallet, WalletTransaction } from '../../shared/types.js';
 import type { DirectMessage } from '../../shared/directMessages.js';
+import type { MoneyPolicySnapshot } from '../../shared/money.js';
 import type { CouponGrant, CouponTemplate, DeviceBan, ExposureLog, SupportTicket } from '../routes/ops.js';
 
 export type UserRole = 'USER' | 'PLAYER' | 'ADMIN';
@@ -105,6 +106,8 @@ export type PersistedState = {
     quantity: number;
     unitPrice: number;
     totalPrice: number;
+    moneyPolicy?: MoneyPolicySnapshot;
+    settlementDiamonds?: number;
     status: 'CREATED' | 'ACCEPTED' | 'IN_SERVICE' | 'COMPLETED' | 'CANCELLED' | 'DISPUTED';
     createdAt: number;
     acceptedAt?: number;

@@ -7,6 +7,8 @@ import { assertRateInLevelBand } from '../policy/index.js';
 import { levelFromHourlyRate } from '../policy/leveling.js';
 import type { CouponGrant } from './ops.js';
 import { publicCompanion } from '../domain/publicCompanion.js';
+import { moneyConfig, moneySnapshot } from '../policy/moneyConfig.js';
+import { Decimal } from 'decimal.js';
 
 const MODERATION_BLOCKLIST = ['诈骗', 'fraud', 'scam', '色情', 'porn'];
 
@@ -246,6 +248,7 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
       const discount = tpl.type === 'FIXED' ? tpl.value : Math.min(totalPrice, totalPrice * (tpl.value / 100));
       totalPrice = Math.max(0, Math.round((totalPrice - discount) * 100) / 100);
     }
+    totalPrice = new Decimal(totalPrice).floor().toNumber();
     const userWallet = getWallet(userId);
     if (userWallet.balance < totalPrice) return sendError(res, 409, 'WALLET_INSUFFICIENT_BALANCE', 'Insufficient wallet balance');
     const order = {
@@ -256,6 +259,8 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
       quantity: qty,
       unitPrice: companion.hourlyRate,
       totalPrice,
+      moneyPolicy: moneySnapshot(moneyConfig),
+      settlementDiamonds: new Decimal(totalPrice).times(moneyConfig.orderDiamondsPerCoin).floor().toNumber(),
       status: 'CREATED' as const,
       createdAt: Date.now(),
       updatedAt: Date.now()
@@ -346,7 +351,7 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
         description: `Order payment ${order.serviceName}`
       });
       const cp = companions.find(c => c.id === order.companionId);
-      if (cp) addDiamonds(cp.userId, order.totalPrice, order.id, `Order income ${order.serviceName}`);
+      if (cp) addDiamonds(cp.userId, order.settlementDiamonds ?? order.totalPrice, order.id, `Order income ${order.serviceName}`);
       order.settlementDone = true;
       persistState();
     }

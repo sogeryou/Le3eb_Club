@@ -1,3 +1,5 @@
+import { MoneyPolicyNotice } from '../components/MoneyPolicyNotice';
+import { useMoneyPolicy } from '../hooks/useMoneyPolicy';
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ArrowLeft, Wallet, History, Calendar, ArrowDownLeft, ArrowUpRight } from 'lucide-react';
@@ -24,6 +26,7 @@ export function WalletView({
   const [customStartDate, setCustomStartDate] = useState<string>('');
   const [customEndDate, setCustomEndDate] = useState<string>('');
 
+  const policy = useMoneyPolicy();
   const detectPaymentMethod = (): 'APPLE_PAY' | 'GOOGLE_PAY' => {
     const ua = navigator.userAgent.toLowerCase();
     if (/iphone|ipad|ipod|macintosh/.test(ua)) return 'APPLE_PAY';
@@ -138,6 +141,7 @@ export function WalletView({
               </div>
             </GlassCard>
 
+            <MoneyPolicyNotice />
             {/* Recharge Packages */}
             <div className="space-y-4">
               <p className="text-gray-400 text-xs font-black uppercase tracking-widest px-2">Recharge Packages</p>
@@ -145,19 +149,18 @@ export function WalletView({
                 {packages.map(pkg => (
                   <button 
                     key={pkg.id}
+                    disabled={policy?.rechargeMode !== 'sandbox'}
+                    data-recharge-package={pkg.id}
                     onClick={() => onSelectPackage(pkg, detectPaymentMethod())}
                     className="relative p-6 rounded-3xl border-2 bg-white/5 border-white/10 hover:bg-white/10 hover:border-purple-500/50 transition-all flex flex-col items-center gap-3 active:scale-95 group"
                   >
-                    {pkg.bonus && (
-                      <div className="absolute -top-2 -right-2 bg-yellow-500 text-yellow-950 text-[10px] font-black px-2 py-1 rounded-full shadow-lg z-10">
-                        +{pkg.bonus} BONUS
-                      </div>
-                    )}
+
                     <div className="flex items-center gap-2 group-hover:scale-110 transition-transform">
                       <span className="text-3xl font-black text-white">{pkg.coins}</span>
                       <CoinIcon className="w-5 h-5" />
                     </div>
                     <div className="text-purple-400 font-black text-lg">${pkg.amount}</div>
+                    {!!pkg.channelFeeUsd && <span className="text-xs text-gray-300">Channel fee: {pkg.channelFeeUsd} USD</span>}
                   </button>
                 ))}
               </div>
@@ -225,4 +228,4 @@ export function WalletView({
       </div>
     </div>
   );
-};
+};

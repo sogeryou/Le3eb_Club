@@ -50,6 +50,7 @@ import { legacyHashPassword as hashPassword, loadState, normalizeUserPassword, s
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerBusinessRoutes } from './routes/business.js';
 import { registerConversationRoutes } from './routes/conversations.js';
+import { buildRechargePackages, moneyConfig, validatePackages } from './policy/moneyConfig.js';
 import { registerFinanceRoutes } from './routes/finance.js';
 import { registerUploadRoutes } from './routes/uploads.js';
 
@@ -57,6 +58,8 @@ const IS_PRODUCTION = process.env.NODE_ENV === 'production';
 
 async function startServer() {
   const env = loadEnv();
+  const RECHARGE_PACKAGES = buildRechargePackages(moneyConfig);
+  validatePackages(RECHARGE_PACKAGES, moneyConfig);
   await initSentry();
   validateLevelingConfig();
   const app = express();
@@ -87,14 +90,6 @@ async function startServer() {
   });
 
   // --- Runtime data ---
-  const RECHARGE_PACKAGES: RechargePackage[] = [
-    { id: 'pkg_1', amount: 0.99, coins: 60 },
-    { id: 'pkg_2', amount: 4.99, coins: 300, bonus: 15 },
-    { id: 'pkg_3', amount: 9.99, coins: 600, bonus: 45 },
-    { id: 'pkg_4', amount: 19.99, coins: 1200, bonus: 120 },
-    { id: 'pkg_5', amount: 49.99, coins: 3000, bonus: 450 },
-    { id: 'pkg_6', amount: 99.99, coins: 6000, bonus: 1200 },
-  ];
 
   const state = loadState();
 
@@ -105,7 +100,7 @@ async function startServer() {
 
   // --- Risk Control State ---
   const dailyRechargeLimits: Record<string, { amount: number; lastReset: number }> = state.dailyRechargeLimits;
-  const MAX_DAILY_RECHARGE = 500; // USD
+  const MAX_DAILY_RECHARGE = moneyConfig.maxDailyRechargeUsd;
   const users = state.users;
   const sessions: Record<string, { token: string; userId: string; expiresAt: number }> = state.sessions;
   const companions = state.companions;

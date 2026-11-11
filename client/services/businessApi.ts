@@ -1,5 +1,6 @@
 import type { RechargeOrder, RechargePackage, Wallet as WalletType, WalletTransaction } from '@shared/types';
 import type { ConversationSummary, DirectMessage, MessagePage } from '@shared/directMessages';
+import type { PublicMoneyPolicy } from '@shared/money';
 
 export interface AuthUser {
   id: string;
@@ -174,6 +175,9 @@ export const businessApi = {
   listOrders(token: string) {
     return request<BusinessOrder[]>('/api/orders', 'GET', undefined, token);
   },
+  getMoneyPolicy() {
+    return request<PublicMoneyPolicy>('/api/money/policy', 'GET');
+  },
   openConversation(token: string, target: { companionId: string } | { orderId: string }) {
     return request<ConversationSummary>('/api/conversations', 'POST', target, token);
   },
@@ -199,8 +203,8 @@ export const businessApi = {
   listRechargePackages() {
     return request<RechargePackage[]>('/api/recharge/packages', 'GET');
   },
-  createRechargeOrder(token: string, packageId: string, paymentMethod: 'GOOGLE_PAY' | 'APPLE_PAY') {
-    return request<RechargeOrder>('/api/recharge/create', 'POST', { packageId, paymentMethod }, token);
+  createRechargeOrder(token: string, packageId: string, paymentMethod: 'GOOGLE_PAY' | 'APPLE_PAY', policyId?: string) {
+    return request<RechargeOrder>('/api/recharge/create', 'POST', { packageId, paymentMethod, policyId }, token);
   },
   verifyRecharge(token: string, orderId: string, transactionId: string, status: 'SUCCESS' | 'FAILED') {
     return request<{ status: 'SUCCESS' | 'PENDING' | 'FAILED'; alreadyProcessed?: boolean; coins?: number; message?: string }>(

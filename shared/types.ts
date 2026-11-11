@@ -1,3 +1,5 @@
+import type { MoneyPolicySnapshot } from './money.js';
+
 export interface Message {
   id: string;
   senderId: string;
@@ -165,6 +167,10 @@ export interface RechargePackage {
   amount: number; // USD
   coins: number;
   bonus?: number;
+  grossCoins?: number;
+  channelFeeUsd?: number;
+  moneyPolicy?: MoneyPolicySnapshot;
+  sandboxOnly?: boolean;
 }
 
 export type RechargeStatus = 'PENDING' | 'PAID' | 'SUCCESS' | 'FAILED' | 'REFUNDED';
@@ -181,6 +187,10 @@ export interface RechargeOrder {
   timestamp: number;
   riskFlag?: boolean;
   riskReason?: string;
+  grossCoins?: number;
+  channelFeeUsd?: number;
+  moneyPolicy?: MoneyPolicySnapshot;
+  sandboxOnly?: boolean;
 }
 
 export interface WalletTransaction {
