@@ -44,6 +44,7 @@ export const defaultState = (): PersistedState => ({
   users: [],
   sessions: {},
   companions: [],
+  conversations: [],
   orders: [],
   reviews: [],
   riskEvents: [],
@@ -67,6 +68,7 @@ export const sanitizePersistedState = (s: PersistedState) => {
   }
   if (!Array.isArray(s.users)) (s as any).users = [];
   if (!Array.isArray(s.companions)) (s as any).companions = [];
+  if (!Array.isArray(s.conversations)) s.conversations = [];
   if (!Array.isArray(s.orders)) (s as any).orders = [];
   if (!Array.isArray(s.reviews)) (s as any).reviews = [];
   if (!Array.isArray(s.riskEvents)) (s as any).riskEvents = [];

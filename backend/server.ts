@@ -49,6 +49,7 @@ import type { AppContext } from './app/context.js';
 import { legacyHashPassword as hashPassword, loadState, normalizeUserPassword, saveState } from './state/jsonState.js';
 import { registerAuthRoutes } from './routes/auth.js';
 import { registerBusinessRoutes } from './routes/business.js';
+import { registerConversationRoutes } from './routes/conversations.js';
 import { registerFinanceRoutes } from './routes/finance.js';
 import { registerUploadRoutes } from './routes/uploads.js';
 
@@ -555,6 +556,7 @@ async function startServer() {
 
   registerAuthRoutes(app, appContext);
   registerBusinessRoutes(app, appContext);
+  registerConversationRoutes(app, appContext, state.conversations);
 
   const enrichOrder = (o: (typeof orders)[number]) => {
     const buyer = users.find(u => u.id === o.userId);

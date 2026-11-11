@@ -152,6 +152,7 @@ const {
                 
                 {/* Back Button */}
                 <button 
+                  aria-label={locale === 'ar' ? 'رجوع' : 'Back'}
                   onClick={handleBack}
                   className="absolute top-6 left-6 p-2 bg-black/20 backdrop-blur-md border border-white/10 rounded-full text-white hover:bg-black/40 transition-all z-50"
                 >
@@ -603,10 +604,10 @@ const {
               <div className="fixed bottom-0 left-0 right-0 z-50 px-6 pb-8 pt-4 pointer-events-none">
                 <div className="flex gap-4 max-w-md mx-auto pointer-events-auto">
                   <button 
-                    onClick={() => selectedEPal && navigateTo('IM_DETAIL', selectedEPal)}
+                    onClick={() => selectedEPal && navigateTo('IM_DETAIL', { companionId: selectedEPal.id })}
                     className="flex-1 py-4 rounded-2xl bg-[#0b4a38]/90 backdrop-blur-xl border border-white/10 font-bold flex items-center justify-center gap-3 text-[#fff9ed] shadow-2xl active:scale-95 transition-all"
                   >
-                    <MessageSquare className="w-5 h-5 text-[#efd9a0]" /> Chat
+                    <MessageSquare className="w-5 h-5 text-[#efd9a0]" /> {locale === 'ar' ? 'دردش أولاً' : 'Chat first'}
                   </button>
                   <button 
                     onClick={() => selectedEPal && navigateTo('ORDER_CONFIRM', { epal: selectedEPal })}

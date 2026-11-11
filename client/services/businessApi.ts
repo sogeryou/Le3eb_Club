@@ -1,4 +1,5 @@
 import type { RechargeOrder, RechargePackage, Wallet as WalletType, WalletTransaction } from '@shared/types';
+import type { ConversationSummary, DirectMessage, MessagePage } from '@shared/directMessages';
 
 export interface AuthUser {
   id: string;
@@ -172,6 +173,22 @@ export const businessApi = {
   },
   listOrders(token: string) {
     return request<BusinessOrder[]>('/api/orders', 'GET', undefined, token);
+  },
+  openConversation(token: string, target: { companionId: string } | { orderId: string }) {
+    return request<ConversationSummary>('/api/conversations', 'POST', target, token);
+  },
+  listConversations(token: string) {
+    return request<ConversationSummary[]>('/api/conversations', 'GET', undefined, token);
+  },
+  conversationMessages(token: string, id: string, page?: { before: number } | { after: number }) {
+    const query = page ? ('after' in page ? `?after=${page.after}` : `?before=${page.before}`) : '';
+    return request<MessagePage>(`/api/conversations/${encodeURIComponent(id)}/messages${query}`, 'GET', undefined, token);
+  },
+  sendConversationMessage(token: string, id: string, content: string, clientId: string) {
+    return request<DirectMessage>(`/api/conversations/${encodeURIComponent(id)}/messages`, 'POST', { content, clientId }, token);
+  },
+  markConversationRead(token: string, id: string, through: number) {
+    return request<{ unreadCount: number }>(`/api/conversations/${encodeURIComponent(id)}/read`, 'POST', { through }, token);
   },
   createReview(token: string, orderId: string, rating: number, content: string) {
     return request<BusinessReview>('/api/reviews', 'POST', { orderId, rating, content }, token);
