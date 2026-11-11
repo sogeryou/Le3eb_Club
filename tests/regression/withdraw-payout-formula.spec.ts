@@ -2,9 +2,9 @@ import { describe, expect, it } from 'vitest';
 import { computeWithdraw } from '../../backend/policy/money.js';
 
 describe('regression: withdraw payout', () => {
-  it('must not return $0 for 1000 diamonds (historical bug)', () => {
-    const { payoutUsd } = computeWithdraw(1000);
-    expect(payoutUsd).toBe(38);
+  it('keeps the agreed 150 diamonds/USD quote without the old 5% platform fee', () => {
+    const { payoutUsd } = computeWithdraw(3000);
+    expect(payoutUsd).toBe(20);
     expect(payoutUsd).toBeGreaterThan(0);
   });
 });

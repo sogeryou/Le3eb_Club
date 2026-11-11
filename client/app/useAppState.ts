@@ -335,11 +335,12 @@ export function useAppState() {
     }
     setIsRecharging(true);
     try {
+      const policy = await businessApi.getMoneyPolicy();
+      if (policy.rechargeMode !== 'sandbox') throw new Error('Real recharge is not available.');
       // 1. Create Order
-      const order = await businessApi.createRechargeOrder(token, pkg.id, method);
+      const order = await businessApi.createRechargeOrder(token, pkg.id, method, pkg.moneyPolicy?.policyId);
 
-      // 2. Simulate Payment Gateway (Apple/Google Pay)
-      // In a real app, this would open the native payment sheet
+      // Explicit development sandbox only; never represents a native store payment.
       await new Promise(resolve => setTimeout(resolve, 2000));
       const transactionId = `pay_${Math.random().toString(36).substr(2, 9)}`;
 
@@ -355,6 +356,7 @@ export function useAppState() {
         navigateTo('WALLET');
       }
     } catch (err: any) {
+      await fetchPackages();
       notify(err.message || 'Recharge failed');
     } finally {
       setIsRecharging(false);

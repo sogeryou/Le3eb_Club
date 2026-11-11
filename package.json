@@ -18,7 +18,7 @@
     "test:regression": "vitest run tests/regression",
     "test:smoke": "node scripts/smoke.mjs",
     "test:e2e": "playwright test",
-    "validate": "node scripts/validate-policy.mjs && node scripts/validate-alg.mjs",
+    "validate": "tsx scripts/validate-money.ts && node scripts/validate-alg.mjs",
     "prisma:generate": "prisma generate",
     "prisma:migrate:dev": "prisma migrate dev",
     "prisma:migrate:deploy": "prisma migrate deploy",
