@@ -309,10 +309,10 @@ pnpm install --frozen-lockfile
 export NODE_ENV=development
 export STORAGE_BACKEND=json
 export PAYMENT_PROVIDER=sandbox
-export ALLOW_DEMO_SEED=false
 export SETTLEMENT_CRON_DISABLED=true
 unset DATABASE_URL REDIS_URL S3_BUCKET S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY
 unset ADMIN_EMAIL ADMIN_PASSWORD
+unset ALLOW_DEMO_SEED
 
 # 可选：仅在全新目录、尚未启动服务时执行。省略这一行即不创建本地种子账号。
 LE3EB_LOCAL_SEED=1 pnpm exec tsx scripts/seed-local.ts --confirm-local
@@ -323,7 +323,7 @@ pnpm dev
 
 种子命令只允许明确的 development/test 环境，拒绝生产或连接外部数据服务的环境；以独占创建方式写入文件，**已有任何 `backend/data/storage.json` 都会拒绝覆盖**。如果已经启动过服务，请使用另一个全新本地 clone，不要为了运行种子而删除原文件。所有种子余额为 0。
 
-**已知历史问题：**当前启动代码在未显式设置 `ALLOW_DEMO_SEED=false` 时仍可能自动创建 `demo_user` 买家；设置管理员环境变量也会触发旧管理员引导。卡 7 未改业务代码，以上命令显式关闭这两条路径。该问题已由独立回归测试记录，不能视为已修复。
+**演示账号默认关闭：**不设置 `ALLOW_DEMO_SEED` 或设为 `false` 时，启动不会创建 demo 账号或赠送金币。仅在非生产环境明确设置 `ALLOW_DEMO_SEED=true` 才会启用原有演示账号（`demo@le3eb.club` / `demo123`，初始钱包 120 金币）；生产环境始终不创建。此开关与上面的显式本地种子命令独立。管理员引导仍只在显式配置管理员环境变量时运行，逻辑未改。
 
 ### 仅限本地的种子账号
 
@@ -355,13 +355,13 @@ pnpm validate
 # 只在临时副本中把扣币多改 1 金币，证明回归断言会报红；原业务源码不变。
 pnpm exec tsx scripts/prove-regression-guard.ts
 
-# 显示上述自动 demo 买家问题的原始失败（预期命令返回非零）。
-CARD7_SHOW_KNOWN_FAILURE=1 pnpm exec vitest run tests/integration/startup-seed-isolation.spec.ts
+# 默认启动与显式关闭 demo 的正常回归检查。
+pnpm exec vitest run tests/integration/startup-seed-isolation.spec.ts
 ```
 
-核心集成测试使用独立临时目录和独立端口，不连接本地服务，不读写现有业务数据。默认测试报告中的 KNOWN DEFECT 用例是明确标注的预期失败，不代表自动种子问题已通过验收。
+核心集成测试使用独立临时目录和独立端口，不连接本地服务，不读写现有业务数据。启动隔离用例均为普通测试，不使用预期失败或额外开关；默认启动必须实际保持 0 用户、0 陪玩和空钱包。
 
-卡 7 的逐项验收、历史缺陷复现及实际命令日志见 [验证记录](tests/evidence/card7-verification.md)。
+卡 7 的逐项验收、自动种子修复及实际命令日志见 [验证记录](tests/evidence/card7-verification.md)。
 
 ### 默认访问地址
 
