@@ -1,6 +1,7 @@
 import type { RechargeOrder, RechargePackage, Wallet as WalletType, WalletTransaction } from '@shared/types';
 import type { ConversationSummary, DirectMessage, MessagePage } from '@shared/directMessages';
 import type { PublicMoneyPolicy } from '@shared/money';
+import type { Game } from '@shared/types';
 
 export interface AuthUser {
   id: string;
@@ -142,6 +143,9 @@ export const businessApi = {
   },
   discoverCompanions() {
     return request<PublicCompanion[]>('/api/companions', 'GET');
+  },
+  listGames() {
+    return request<Game[]>('/api/games', 'GET');
   },
   async uploadAvatar(token: string, file: File) {
     if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || !file.size || file.size > 5 * 1024 * 1024) {

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState, type CSSProperties } from 'react';
 import { ResilientImage } from '../client/components/ResilientImage';
+import { GAME_CATALOG } from '../shared/games';
 import {
   LayoutDashboard,
   Gamepad2,
@@ -489,6 +490,21 @@ export default function AdminWorkbench({ token, adminEmail, permissions, onLogou
     void run(action === 'APPROVE' ? '批准陪玩' : '驳回申请',
       () => adminApi.reviewCompanion(token, record.id, action, reason, record.updatedAt));
   };
+  const gameResolution = (record: { id: string; gameName: string; gameResolutionRequired?: boolean }) => record.gameResolutionRequired ? (
+    <form className="space-y-2 my-2" onSubmit={event => {
+      event.preventDefault();
+      if (!token) return;
+      const gameId = String(new FormData(event.currentTarget).get('gameId') ?? '');
+      void run('更正游戏并送审', () => adminApi.resolveCompanionGame(token, record.id, gameId));
+    }}>
+      <p className="text-amber-300">旧游戏名待确认：{record.gameName}。未确认前不在公共列表展示。</p>
+      <select name="gameId" required defaultValue="" className="bg-[#07382a] rounded p-2">
+        <option value="" disabled>选择真实游戏</option>
+        {GAME_CATALOG.map(game => <option value={game.id} key={game.id}>{game.name}</option>)}
+      </select>
+      <button className="rounded border p-2" type="submit">更正并送审</button>
+    </form>
+  ) : null;
   const handleLogout = async () => {
     setDashboard(null);
     setCompanions([]);
@@ -598,6 +614,7 @@ export default function AdminWorkbench({ token, adminEmail, permissions, onLogou
                 <ResilientImage kind="avatar" src={record.avatarUrl} className="w-10 h-10 rounded object-cover" />
                 <p className="whitespace-pre-wrap break-all">{record.intro}</p>
               </div>}
+              {module.key === 'companions' && gameResolution(record)}
               {module.key === 'companions' && record.status === 'PENDING_REVIEW' &&
                 module.actions.map(a => (
                   <button
@@ -676,6 +693,7 @@ export default function AdminWorkbench({ token, adminEmail, permissions, onLogou
                   </td>
                 ))}
                 <td className="border-b border-white/5 py-2 px-3 space-x-1 whitespace-nowrap">
+                  {module.key === 'companions' && gameResolution(record)}
                   {module.key === 'companions' && record.status === 'PENDING_REVIEW' &&
                     module.actions.map(a => (
                       <button

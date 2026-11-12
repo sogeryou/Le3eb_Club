@@ -1,4 +1,5 @@
 import type { CompanionEntity, OrderEntity, ReviewEntity, UserEntity } from './types.js';
+import { resolveStoredGame } from '../../shared/games.js';
 
 export function publicCompanion(
   companion: CompanionEntity,
@@ -7,10 +8,12 @@ export function publicCompanion(
   reviews: ReviewEntity[],
 ) {
   if (companion.status !== 'APPROVED' || !user || user.id !== companion.userId) return null;
+  const game = resolveStoredGame(companion.gameName);
+  if (!game) return null;
   const visibleReviews = reviews.filter(r => r.companionId === companion.id && r.status === 'APPROVED');
   const { id, gameName, intro, hourlyRate, availability } = companion;
   return {
-    id, gameName, intro, hourlyRate, availability,
+    id, gameId: game.id, gameName: game.name, intro, hourlyRate, availability,
     displayName: user.username,
     avatarUrl: user.avatarUrl ?? null,
     rating: visibleReviews.length

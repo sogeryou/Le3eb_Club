@@ -19,6 +19,7 @@
 .discovery-games button { position:relative; display:flex; align-items:end; min-height:145px; overflow:hidden; border-radius:10px; border:1px solid #c79a3b; background:#07382a; color:#fff9ed; font-weight:700; }
 .discovery-games img { position:absolute; inset:0; width:100%; height:100%; object-fit:cover; }
 .discovery-games button span { position:relative; width:100%; padding:24px 12px 10px; display:flex; gap:8px; align-items:center; background:linear-gradient(transparent,#052a1f); }
+.discovery-games .game-online-count { position:absolute; inset-block-start:8px; inset-inline-end:8px; padding:2px 7px; border-radius:6px; background:#07382ae6; color:#fff9ed; }
 .discovery-games button[aria-pressed=true] { outline:2px solid #85601c; outline-offset:2px; }
 .discovery-games button[aria-pressed=true] { color:#efd9a0; background:#07382a; }
 .discovery-state,.discovery-player { background:#fff9ed; border:1px solid #e0cda5; padding:18px; border-radius:10px; }

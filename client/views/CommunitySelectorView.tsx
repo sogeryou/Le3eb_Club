@@ -155,7 +155,7 @@ const {
                   <div key={letter} className="space-y-4">
                     <div className="text-purple-400 font-bold text-lg border-b border-white/10 pb-2">{letter}</div>
                     <div className="grid grid-cols-3 gap-x-4 gap-y-6">
-                      {games.sort((a, b) => a.name.localeCompare(b.name)).map(game => (
+                      {(games as Game[]).sort((a, b) => a.name.localeCompare(b.name)).map(game => (
                         <button
                           key={game.id}
                           onClick={() => {

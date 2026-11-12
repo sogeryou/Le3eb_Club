@@ -9,6 +9,8 @@ import type { CouponGrant } from './ops.js';
 import { publicCompanion } from '../domain/publicCompanion.js';
 import { moneyConfig, moneySnapshot } from '../policy/moneyConfig.js';
 import { Decimal } from 'decimal.js';
+import { findCatalogGame, resolveStoredGame } from '../../shared/games.js';
+import { gameDirectory } from '../domain/gameDirectory.js';
 
 const MODERATION_BLOCKLIST = ['诈骗', 'fraud', 'scam', '色情', 'porn'];
 
@@ -36,7 +38,10 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
 
   app.post('/api/companions/apply', authMiddleware, zValidate(CompanionApplySchema), (req, res) => {
     const userId = (req as any).authUserId as string;
-    const { gameName, intro, hourlyRate } = (req as express.Request & { validatedBody: { gameName: string; intro: string; hourlyRate: number } }).validatedBody;
+    const { gameName: requestedGame, intro, hourlyRate } = (req as express.Request & { validatedBody: { gameName: string; intro: string; hourlyRate: number } }).validatedBody;
+    const game = findCatalogGame(requestedGame);
+    if (!game) return sendError(res, 422, 'COMPANION_GAME_INVALID', 'Select a game from the supported directory');
+    const gameName = game.name;
     const level = levelFromHourlyRate(hourlyRate);
     const band = assertRateInLevelBand(level, hourlyRate);
     if (!band.ok) {
@@ -44,7 +49,7 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
     }
     const existing = companions.find(c => c.userId === userId);
     if (existing) {
-      if (existing.status === 'APPROVED' && existing.gameName === gameName && existing.intro === intro && existing.hourlyRate === hourlyRate) {
+      if (existing.status === 'APPROVED' && resolveStoredGame(existing.gameName)?.id === game.id && existing.intro === intro && existing.hourlyRate === hourlyRate) {
         return res.json(existing);
       }
       existing.gameName = gameName;
@@ -99,6 +104,8 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
     }));
   });
 
+  app.get('/api/games', (_req, res) => res.json(gameDirectory(companions, users)));
+
   app.get('/api/companions/rankings', (req, res) => {
     const limitRaw = Number(req.query.limit || 20);
     const limit = Number.isFinite(limitRaw) ? Math.max(1, Math.min(100, Math.floor(limitRaw))) : 20;
@@ -108,7 +115,7 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
       nowSeed: Math.floor(Date.now() / 3_600_000),
     };
     const candidates = companions
-      .filter(c => c.status === 'APPROVED')
+      .filter(c => c.status === 'APPROVED' && Boolean(resolveStoredGame(c.gameName)) && Boolean(getUserById(c.userId)))
       .map(companion => {
         const companionOrders = orders.filter(o => o.companionId === companion.id);
         const completedOrders = companionOrders.filter(o => o.status === 'COMPLETED');
@@ -158,7 +165,7 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
       return {
         rank: row.rank,
         companionId: companion.id,
-        gameName: companion.gameName,
+        gameName: resolveStoredGame(companion.gameName)!.name,
         hourlyRate: companion.hourlyRate,
         availability: companion.availability,
         avgRating: Number(avgRating.toFixed(2)),
@@ -186,7 +193,7 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
     if (!companion || !card) return sendError(res, 404, 'COMPANION_NOT_FOUND', 'Companion not found');
     res.json({
       ...card,
-      services: [{ id: companion.id, name: companion.gameName, unitPrice: companion.hourlyRate, unit: 'hour' }],
+      services: [{ id: companion.id, name: card.gameName, unitPrice: companion.hourlyRate, unit: 'hour' }],
       reviews: reviews.filter(r => r.companionId === companion.id && r.status === 'APPROVED').map(r => ({
         id: r.id, rating: r.rating, content: r.content, createdAt: r.createdAt,
         displayName: getUserById(r.userId)?.username ?? null,
@@ -228,6 +235,7 @@ export function registerBusinessRoutes(app: express.Application, ctx: AppContext
     const companion = companions.find(c => c.id === body.companionId);
     if (!companion) return sendError(res, 404, 'ORDER_COMPANION_NOT_FOUND', 'Companion not found');
     if (companion.status !== 'APPROVED') return sendError(res, 409, 'ORDER_COMPANION_NOT_APPROVED', 'Companion is not approved');
+    if (!resolveStoredGame(companion.gameName)) return sendError(res, 409, 'ORDER_GAME_REQUIRES_REVIEW', 'Companion game requires administrator review');
     if (companion.availability !== 'ONLINE') return sendError(res, 409, 'ORDER_COMPANION_UNAVAILABLE', 'Companion unavailable');
     const level = levelFromHourlyRate(companion.hourlyRate);
     const priceBand = assertRateInLevelBand(level, companion.hourlyRate);

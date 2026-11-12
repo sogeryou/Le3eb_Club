@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../app/AppContext';
 import { businessApi } from '../services/businessApi';
+import { GAME_CATALOG, resolveStoredGame } from '@shared/games';
 
 export function PlayerProfileEditView() {
   const { authToken, myCompanion, myCompanionLoading, myCompanionError, recordCompanionApplication,
@@ -34,11 +35,14 @@ export function PlayerProfileEditView() {
             : myCompanion.status === 'APPROVED' ? label('مقبول', 'Approved') : label('مرفوض', 'Rejected')}</p>
           {myCompanion.rejectionReason && <p>{myCompanion.rejectionReason}</p>}
           <p>{label('بعد تعديل الملف سيُخفى حتى الموافقة مجدداً.', 'Changes hide your listing until an administrator approves it again.')}</p>
-          <label className="block">{label('اللعبة', 'Game')}<input name="game" required maxLength={80} className="block w-full bg-white/10 rounded p-3" defaultValue={myCompanion.gameName} /></label>
+          <label className="block">{label('اللعبة', 'Game')}<select name="game" required className="block w-full bg-[#07382a] rounded p-3" defaultValue={resolveStoredGame(myCompanion.gameName)?.name ?? ''}>
+            <option value="" disabled>{label('اختر لعبة مدعومة', 'Select a supported game')}</option>
+            {GAME_CATALOG.map(game => <option value={game.name} key={game.id}>{game.name}</option>)}
+          </select></label>
           <label className="block" htmlFor="companion-intro">{label('النبذة', 'Introduction')}</label>
           <textarea id="companion-intro" name="intro" required maxLength={2000} className="block w-full bg-white/10 rounded p-3" defaultValue={myCompanion.intro} />
           <label className="block">{label('السعر بالساعة', 'Hourly rate')}<input name="price" required type="number" step="any" min="0.01" max="500" className="block w-full bg-white/10 rounded p-3" defaultValue={myCompanion.hourlyRate} /></label>
-          <button className="rounded bg-purple-600 px-4 py-3" disabled={saving}>{label('حفظ التغييرات', 'Save changes')}</button>
+          <button className="rounded bg-[#0b6b4f] px-4 py-3" disabled={saving}>{label('حفظ التغييرات', 'Save changes')}</button>
           <p role="status">{message}</p>
         </form>}
   </section>;

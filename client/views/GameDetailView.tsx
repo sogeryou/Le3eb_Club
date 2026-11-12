@@ -1,3 +1,4 @@
+import { sameGame } from '@shared/games';
 import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
@@ -205,7 +206,7 @@ const {
 
                 {(() => {
                   const filteredEpals = EPALS
-                    .filter(e => e.game.toLowerCase().includes(selectedGame?.name.toLowerCase().split(' ')[0] || ''))
+                    .filter(e => sameGame(e.game, selectedGame?.id))
                     .filter(e => {
                       if (epalFilters.status === 'ONLINE' && e.onlineStatus !== 'Online') return false;
                       if (epalFilters.gender !== 'ALL' && e.gender !== epalFilters.gender) return false;
@@ -214,7 +215,7 @@ const {
                       // For Server, Platform, Rank, we check playlinks
                       if (epalFilters.server !== 'ALL' || epalFilters.platform !== 'ALL' || epalFilters.rank !== 'ALL') {
                         const matchingPlaylink = e.playlinks?.find(pl => 
-                          pl.gameName.toLowerCase().includes(selectedGame?.name.toLowerCase().split(' ')[0] || '')
+                          sameGame(pl.gameName, selectedGame?.id)
                         );
                         if (!matchingPlaylink) return false;
                         if (epalFilters.server !== 'ALL' && matchingPlaylink.server !== epalFilters.server) return false;
@@ -258,7 +259,7 @@ const {
 
                   return filteredEpals.map(epal => {
                     const playlink = epal.playlinks?.find(pl => 
-                      pl.gameName.toLowerCase().includes(selectedGame?.name.toLowerCase().split(' ')[0] || '')
+                      sameGame(pl.gameName, selectedGame?.id)
                     );
                     
                     let badgeText = undefined;

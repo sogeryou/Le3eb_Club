@@ -44,7 +44,7 @@ export type Category = 'GAMES' | 'CHILLING' | 'FAVOURITE';
 export interface Game {
   id: string;
   name: string;
-  onlineCount: string;
+  onlineCompanions?: number;
   imageUrl: string;
   category: Category;
   hasRank?: boolean;

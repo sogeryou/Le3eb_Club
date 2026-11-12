@@ -1,3 +1,4 @@
+import { sameGame } from '@shared/games';
 import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { 
@@ -140,7 +141,7 @@ const {
   } = useApp();
 
   return (
-    <div className={currentView === 'HOME' ? 'min-h-screen bg-[#f8f1e5] text-[#07382a]' : currentView === 'PROFILE' ? 'min-h-screen bg-[#07382a] text-[#fff9ed]' : 'min-h-screen bg-[#0f071a] text-white font-sans selection:bg-purple-500/30'}>
+    <div className={currentView === 'HOME' ? 'min-h-screen bg-[#f8f1e5] text-[#07382a]' : (currentView === 'PROFILE' || currentView.startsWith('APPLY_PLAYER') || currentView === 'PLAYER_PROFILE_EDIT') ? 'min-h-screen bg-[#07382a] text-[#fff9ed]' : 'min-h-screen bg-[#0f071a] text-white font-sans selection:bg-purple-500/30'}>
       {/* Header */}
       {['COMMUNITY', 'IM', 'ME', 'COMMUNITY_SELECTOR'].includes(currentView) && (
         <header className="sticky top-0 z-50 bg-[#0f071a]/80 backdrop-blur-md px-6 py-4 flex items-center justify-between">
@@ -259,7 +260,7 @@ const {
                     if (query.trim()) {
                       const results = EPALS.filter(epal => 
                         epal.id.toLowerCase().includes(query.toLowerCase()) || 
-                        epal.name.toLowerCase().includes(query.toLowerCase())
+                        epal.name.toLowerCase().includes(query.toLowerCase()) || epal.game.toLowerCase().includes(query.toLowerCase()) || sameGame(epal.game, query)
                       );
                       setFullSearchResults(results);
                     } else {
@@ -423,8 +424,8 @@ const {
 
                 {/* Dynamic Filters (Server, Platform, Rank) */}
                 {(() => {
-                  const gameEpals = EPALS.filter(e => e.game.toLowerCase().includes(selectedGame?.name.toLowerCase().split(' ')[0] || ''));
-                  const playlinks = gameEpals.flatMap(e => e.playlinks || []).filter(pl => pl.gameName.toLowerCase().includes(selectedGame?.name.toLowerCase().split(' ')[0] || ''));
+                  const gameEpals = EPALS.filter(e => sameGame(e.game, selectedGame?.id));
+                  const playlinks = gameEpals.flatMap(e => e.playlinks || []).filter(pl => sameGame(pl.gameName, selectedGame?.id));
                   
                   const servers = Array.from(new Set(playlinks.map(pl => pl.server).filter(Boolean)));
                   const platforms = Array.from(new Set(playlinks.map(pl => pl.platform).filter(Boolean)));
@@ -537,8 +538,8 @@ const {
                   </button>
 
                   {(() => {
-                    const gameEpals = EPALS.filter(e => e.game.toLowerCase().includes(selectedGame?.name.toLowerCase().split(' ')[0] || ''));
-                    const playlinks = gameEpals.flatMap(e => e.playlinks || []).filter(pl => pl.gameName.toLowerCase().includes(selectedGame?.name.toLowerCase().split(' ')[0] || ''));
+                    const gameEpals = EPALS.filter(e => sameGame(e.game, selectedGame?.id));
+                    const playlinks = gameEpals.flatMap(e => e.playlinks || []).filter(pl => sameGame(pl.gameName, selectedGame?.id));
                     const ranks = Array.from(new Set<string>(playlinks.map(pl => pl.rank).filter(Boolean)));
 
                     const RANK_ORDER = [
@@ -600,8 +601,8 @@ const {
               <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-8">
                 <div className="space-y-3">
                   {(() => {
-                    const gameEpals = EPALS.filter(e => e.game.toLowerCase().includes(selectedGame?.name.toLowerCase().split(' ')[0] || ''));
-                    const playlinks = gameEpals.flatMap(e => e.playlinks || []).filter(pl => pl.gameName.toLowerCase().includes(selectedGame?.name.toLowerCase().split(' ')[0] || ''));
+                    const gameEpals = EPALS.filter(e => sameGame(e.game, selectedGame?.id));
+                    const playlinks = gameEpals.flatMap(e => e.playlinks || []).filter(pl => sameGame(pl.gameName, selectedGame?.id));
                     const servers = Array.from(new Set(playlinks.map(pl => pl.server).filter(Boolean)));
 
                     return (
@@ -665,8 +666,8 @@ const {
               <div className="flex-1 overflow-y-auto no-scrollbar px-6 py-8">
                 <div className="space-y-3">
                   {(() => {
-                    const gameEpals = EPALS.filter(e => e.game.toLowerCase().includes(selectedGame?.name.toLowerCase().split(' ')[0] || ''));
-                    const playlinks = gameEpals.flatMap(e => e.playlinks || []).filter(pl => pl.gameName.toLowerCase().includes(selectedGame?.name.toLowerCase().split(' ')[0] || ''));
+                    const gameEpals = EPALS.filter(e => sameGame(e.game, selectedGame?.id));
+                    const playlinks = gameEpals.flatMap(e => e.playlinks || []).filter(pl => sameGame(pl.gameName, selectedGame?.id));
                     const platforms = Array.from(new Set(playlinks.map(pl => pl.platform).filter(Boolean)));
 
                     return (
