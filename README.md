@@ -88,7 +88,7 @@ le3eb_club/
 │   ├── services/              # businessApi — 用户端 API 封装
 │   ├── hooks/                 # useDeviceId、useExposure 等
 │   ├── i18n/                  # 多语言（en/ar/zh-CN/fr/ru/tr）
-│   └── constants.ts           # 社区发现页静态 Mock 数据
+│   └── constants.ts           # 共享真实游戏目录；演示陪玩/动态数组为空
 ├── admin/                     # 运营后台前端
 │   ├── AdminWorkbench.tsx     # 后台主界面
 │   └── services/adminApi.ts   # 管理端 API 封装
@@ -293,14 +293,75 @@ pnpm run build
 ### 依赖
 
 - Node.js 22+（推荐）
-- pnpm 9+（推荐）或 npm
+- pnpm 9.15.0（与仓库 `packageManager` 和 CI 一致）
 
-### 安装与启动
+### 从新目录安装与启动（本地 JSON／沙盒，不连接真实资金）
+
+请使用新的本地目录，不要对已有资金记录所在目录执行种子命令。不要把本地数据文件或以下账号部署到生产环境。
 
 ```bash
-pnpm install
+git clone https://github.com/sogeryou/Le3eb_Club.git le3eb-local
+cd le3eb-local
+corepack enable
+corepack prepare pnpm@9.15.0 --activate
+pnpm install --frozen-lockfile
+
+export NODE_ENV=development
+export STORAGE_BACKEND=json
+export PAYMENT_PROVIDER=sandbox
+export SETTLEMENT_CRON_DISABLED=true
+unset DATABASE_URL REDIS_URL S3_BUCKET S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY
+unset ADMIN_EMAIL ADMIN_PASSWORD
+unset ALLOW_DEMO_SEED
+
+# 可选：仅在全新目录、尚未启动服务时执行。省略这一行即不创建本地种子账号。
+LE3EB_LOCAL_SEED=1 pnpm exec tsx scripts/seed-local.ts --confirm-local
 pnpm dev
 ```
+
+浏览器打开下方地址。保持终端运行；停止服务按 Ctrl+C。后端直接读取当前终端环境变量，不会自动加载 `.env.example`。
+
+种子命令只允许明确的 development/test 环境，拒绝生产或连接外部数据服务的环境；以独占创建方式写入文件，**已有任何 `backend/data/storage.json` 都会拒绝覆盖**。如果已经启动过服务，请使用另一个全新本地 clone，不要为了运行种子而删除原文件。所有种子余额为 0。
+
+**演示账号默认关闭：**不设置 `ALLOW_DEMO_SEED` 或设为 `false` 时，启动不会创建 demo 账号或赠送金币。仅在非生产环境明确设置 `ALLOW_DEMO_SEED=true` 才会启用原有演示账号（`demo@le3eb.club` / `demo123`，初始钱包 120 金币）；生产环境始终不创建。此开关与上面的显式本地种子命令独立。管理员引导仍只在显式配置管理员环境变量时运行，逻辑未改。
+
+### 仅限本地的种子账号
+
+以下六个账号共用密码 `Local-Only-Le3eb-2026!`，仅用于本机开发：
+
+| 用途 | 邮箱 | 游戏 |
+| --- | --- | --- |
+| 管理员 | admin@local.le3eb.invalid | 后台审核 |
+| 买家 1 | buyer1@local.le3eb.invalid | — |
+| 买家 2 | buyer2@local.le3eb.invalid | — |
+| 已审核陪玩 | pubg@local.le3eb.invalid | PUBG Mobile |
+| 已审核陪玩 | fc@local.le3eb.invalid | EA Sports FC / FC Mobile |
+| 已审核陪玩 | freefire@local.le3eb.invalid | Free Fire |
+
+显示名和简介均标有 LOCAL，本地状态文件也有 `localSeedOnly` 标记。不要拷贝该文件到服务器。种子不会由 `pnpm dev`、构建或 CI 自动执行。
+
+### 沙盒充值与回归检查
+
+用户登录买家账号后，打开「Me → Wallet」，会看到明确的 Local sandbox 提示。点击 $1 档，在默认配置下只模拟到账 100 金币，不会发生真实 Apple/Google 扣款。
+
+接口验证方式：先读取 `GET /api/recharge/packages` 中的 `id` 和 `moneyPolicy.policyId`；用登录 token 调用 `POST /api/recharge/create`，传 `packageId`、`paymentMethod` 和 `policyId`；再调用 `POST /api/recharge/verify`，传 `orderId: <create 响应中的 id>`、唯一的 `transactionId`、`status: "SUCCESS"` 和 `receipt: "sandbox-ok"`。真实充值和新提现仍未开放。
+
+```bash
+pnpm lint
+pnpm test
+pnpm build
+pnpm validate
+
+# 只在临时副本中把扣币多改 1 金币，证明回归断言会报红；原业务源码不变。
+pnpm exec tsx scripts/prove-regression-guard.ts
+
+# 默认启动与显式关闭 demo 的正常回归检查。
+pnpm exec vitest run tests/integration/startup-seed-isolation.spec.ts
+```
+
+核心集成测试使用独立临时目录和独立端口，不连接本地服务，不读写现有业务数据。启动隔离用例均为普通测试，不使用预期失败或额外开关；默认启动必须实际保持 0 用户、0 陪玩和空钱包。
+
+卡 7 的逐项验收、自动种子修复及实际命令日志见 [验证记录](tests/evidence/card7-verification.md)。
 
 ### 默认访问地址
 

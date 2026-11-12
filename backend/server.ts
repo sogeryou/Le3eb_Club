@@ -221,7 +221,7 @@ async function startServer() {
 
   /** Keep local development usable without shipping demo credentials to production. */
   const ensureDemoBusinessUser = () => {
-    if (IS_PRODUCTION || process.env.ALLOW_DEMO_SEED === 'false') return;
+    if (IS_PRODUCTION || process.env.ALLOW_DEMO_SEED !== 'true') return;
     const hasNonAdmin = users.some(u => u.role !== 'ADMIN');
     if (hasNonAdmin) return;
     const now = Date.now();
