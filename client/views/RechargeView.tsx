@@ -1,3 +1,4 @@
+import { SourceLabel } from '../original/SourceLabel';
 import { MoneyPolicyNotice } from '../components/MoneyPolicyNotice';
 import { useMoneyPolicy } from '../hooks/useMoneyPolicy';
 import React from 'react';
@@ -5,13 +6,13 @@ import { ArrowLeft, ShieldCheck } from 'lucide-react';
 import type { RechargePackage } from '@shared/types';
 import { CoinIcon } from '../components/ui/CoinIcon';
 
-export function RechargeView({ 
-  packages, 
-  onSelect, 
-  onBack 
-}: { 
-  packages: RechargePackage[], 
-  onSelect: (pkg: RechargePackage, method: 'GOOGLE_PAY' | 'APPLE_PAY') => void, 
+export function RechargeView({
+  packages,
+  onSelect,
+  onBack
+}: {
+  packages: RechargePackage[],
+  onSelect: (pkg: RechargePackage, method: 'GOOGLE_PAY' | 'APPLE_PAY') => void,
   onBack: () => void;
 }) {
   const policy = useMoneyPolicy();
@@ -29,17 +30,17 @@ export function RechargeView({
         <button onClick={onBack} className="p-2 hover:bg-white/5 rounded-full transition-colors">
           <ArrowLeft className="w-6 h-6 text-white" />
         </button>
-        <h2 className="text-xl font-bold text-white">Recharge Coins</h2>
+        <h2 className="text-xl font-bold text-white"><SourceLabel text="Recharge Coins" /></h2>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-8">
         <div className="space-y-4">
           <MoneyPolicyNotice />
-          <p className="text-gray-400 text-xs font-black uppercase tracking-widest px-2">Select a Package</p>
+          <p className="text-gray-400 text-xs font-black uppercase tracking-widest px-2"><SourceLabel text="Select a Package" /></p>
           {/* Packages Grid */}
           <div className="grid grid-cols-2 gap-4">
             {packages.map(pkg => (
-              <button 
+              <button
                 key={pkg.id}
                     disabled={policy?.rechargeMode !== 'sandbox'}
                     data-recharge-package={pkg.id}
@@ -65,8 +66,8 @@ export function RechargeView({
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <p className="text-white font-bold text-sm">Sandbox Preview</p>
-              <p className="text-[10px] text-gray-500 font-medium">No real Apple or Google payment is made</p>
+              <p className="text-white font-bold text-sm"><SourceLabel text="Sandbox Preview" /></p>
+              <p className="text-[10px] text-gray-500 font-medium"><SourceLabel text="No real Apple or Google payment is made" /></p>
             </div>
           </div>
         </div>

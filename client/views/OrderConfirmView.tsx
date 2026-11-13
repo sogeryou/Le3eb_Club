@@ -1,91 +1,27 @@
 import { ResilientImage } from '../components/ResilientImage';
 import React from 'react';
 import { businessApi } from '../services/businessApi';
-import { 
-  Search, 
-  Gift, 
-  Gamepad2, 
-  Coffee, 
-  Star, 
-  Home, 
-  Compass, 
-  MessageSquare, 
-  User, 
-  ChevronRight, 
-  Play, 
-  MessageCircle,
-  ArrowLeft,
-  CheckCircle2,
-  Mic2,
-  MapPin,
-  User2,
-  Heart,
-  Venus,
-  Mars,
-  Copy,
-  Check,
-  Plus,
-  Minus,
-  ShoppingCart,
-  Image,
-  Layout,
-  Monitor,
-  Smartphone,
-  Share2,
-  ChevronDown,
-  ChevronUp,
-  Filter,
-  SlidersHorizontal,
-  ThumbsUp,
-  MoreHorizontal,
-  Flag,
-  Users,
-  Zap,
-  Trophy,
-  Send,
-  Bell,
-  Contact,
-  Smile,
-  AlertTriangle,
-  Wallet,
-  CreditCard,
-  History,
-  Settings,
-  X,
-  Camera,
-  LogOut,
-  ShieldCheck,
-  HelpCircle,
-  Gem,
-  ArrowUpRight,
-  ArrowDownLeft,
-  FileText,
-  Calendar,
-  Store,
-  ChevronLeft,
-  Lock,
-  Globe,
-  Shield,
-  Link,
-} from 'lucide-react';
+import { ChevronRight, ArrowLeft, CheckCircle2, Check, Plus, Minus } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Category, Game, EPal, EPalServiceVariant, Coupon, Playlink, Post, Message, ChatSession, IMOrder, Wallet as WalletType, RechargePackage, WalletTransaction, RechargeOrder } from '@shared/types';
-import { PRODUCT_SEMVER } from '../constants';
+import { Coupon } from '@shared/types';
+
 import { GlassCard } from '../components/ui/GlassCard';
-import { IconButton } from '../components/ui/IconButton';
-import { WaveAnimation } from '../components/ui/WaveAnimation';
+
+
 import { CoinIcon } from '../components/ui/CoinIcon';
-import { EPalCard } from '../components/cards/EPalCard';
-import { LegendEPalCard } from '../components/cards/LegendEPalCard';
-import { GameGridItem } from '../components/cards/GameGridItem';
-import { WalletView } from '../views/WalletView';
-import { RechargeView } from '../views/RechargeView';
-import { SettingsSubPage } from '../components/SettingsSubPage';
-import { formatChatMessageTime } from '../lib/chatTime';
+
+
+
+
+
+
+
 
 import { useApp } from '../app/AppContext';
+import { useActiveSessionGuard } from '../original/useActiveSessionGuard';
 
 export function OrderConfirmView() {
+const captureSession = useActiveSessionGuard();
 const {
     deviceId, locale, setLocale, t, supportedLocales, getLocaleLabel,
     currentView, setCurrentView, wallet, setWallet, transactions, setTransactions,
@@ -253,7 +189,7 @@ const {
                   >
                     <span className="text-gray-400">{t('order.coupon')}</span>
                     <div className="flex items-center gap-1.5">
-                      <span className={`font-bold flex items-center gap-1 ${selectedCoupon ? 'text-green-400' : 'text-gray-500'}`}>
+                      <span className={`font-bold flex items-center gap-1 ${selectedCoupon ? 'text-purple-400' : 'text-gray-500'}`}>
                         {selectedCoupon ? (
                           <>
                             -{selectedCoupon.type === 'FIXED' 
@@ -267,7 +203,7 @@ const {
                   </button>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-400">{t('order.discount')}</span>
-                    <span className="font-bold text-green-400 flex items-center gap-1">
+                    <span className="font-bold text-purple-400 flex items-center gap-1">
                       -{selectedCoupon ? (selectedCoupon.type === 'FIXED' ? selectedCoupon.discount : Math.floor((selectedVariant.price * orderQuantity) * (selectedCoupon.discount / 100))) : 0} <CoinIcon />
                     </span>
                   </div>
@@ -305,20 +241,25 @@ const {
                       submitting.current = true;
                       setBusy(true);
                       setSubmitError('');
+                      const stillCurrent = captureSession();
                       try {
                         const orders = await businessApi.listOrders(authToken);
+                        if (!stillCurrent()) return;
                         if (orders.some(order => order.companionId === selectedEPal.id &&
                           !['COMPLETED', 'CANCELLED'].includes(order.status))) {
                           setShowOngoingOrderWarning(true);
                           return;
                         }
                         const order = await businessApi.createOrder(authToken, selectedEPal.id, selectedVariant.name, orderQuantity);
+                        if (!stillCurrent()) return;
                         setCreatedOrderId(order.id);
+                        setSelectedOrder({ id: order.id, epalId: order.companionId, serviceName: order.serviceName, status: 'PENDING', price: order.totalPrice, timestamp: order.createdAt ?? 0 });
+                        navigateTo('ORDER_DETAIL');
                       } catch {
-                        setSubmitError(locale === 'ar' ? 'تعذر إنشاء الطلب. تحقق من الرصيد وتوفر الرفيق وحاول مجدداً.' : 'Could not create the order. Check your balance and companion availability before retrying.');
+                        if (stillCurrent()) setSubmitError(locale === 'ar' ? 'تعذر إنشاء الطلب. تحقق من الرصيد وتوفر الرفيق وحاول مجدداً.' : 'Could not create the order. Check your balance and companion availability before retrying.');
                       } finally {
                         submitting.current = false;
-                        setBusy(false);
+                        if (stillCurrent()) setBusy(false);
                       }
                     }}
                     className="w-full py-4 rounded-2xl bg-purple-600 font-bold text-lg shadow-[0_0_30px_rgba(168,85,247,0.4)] active:scale-95 transition-all text-white"

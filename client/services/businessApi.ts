@@ -76,6 +76,8 @@ export interface BusinessOrder {
   unitPrice: number;
   totalPrice: number;
   status: 'CREATED' | 'ACCEPTED' | 'IN_SERVICE' | 'COMPLETED' | 'CANCELLED' | 'DISPUTED';
+  createdAt?: number;
+  updatedAt?: number;
 }
 
 export interface BusinessReview {
@@ -85,6 +87,16 @@ export interface BusinessReview {
   rating: number;
   content: string;
   status: 'PENDING' | 'APPROVED' | 'REJECTED';
+}
+
+export interface BusinessDashboard {
+  userId: string;
+  role: AuthUser['role'];
+  wallet: WalletType;
+  diamondWallet: { balance: number };
+  companion: CompanionProfile | null;
+  orderSummary: { total: number; created: number; inService: number; completed: number; disputed: number };
+  reviewSummary: { total: number; approved: number; rejected: number };
 }
 
 import { apiUrl, readJsonResponse } from '@shared/apiClient';
@@ -104,6 +116,15 @@ async function request<T>(path: string, method: HttpMethod, body?: unknown, toke
 }
 
 export const businessApi = {
+  getDashboard(token: string) {
+    return request<BusinessDashboard>('/api/dashboard/business', 'GET', undefined, token);
+  },
+  updateCompanionAvailability(token: string, id: string, availability: CompanionProfile['availability']) {
+    return request<CompanionProfile>(`/api/companions/${encodeURIComponent(id)}/availability`, 'PATCH', { availability }, token);
+  },
+  submitReport(token: string, targetType: 'USER' | 'ORDER' | 'COMPANION', targetId: string, reason: string) {
+    return request<{ id: string; status: string }>('/api/moderation/reports', 'POST', { targetType, targetId, reason }, token);
+  },
   register(username: string, email: string, password: string, deviceId?: string) {
     return request<unknown>('/api/auth/register', 'POST', { username, email, password, deviceId });
   },
