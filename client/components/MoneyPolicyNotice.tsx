@@ -6,7 +6,7 @@ export function MoneyPolicyNotice() {
   const policy = useMoneyPolicy();
   const { locale } = useI18n();
   const ar = locale === 'ar';
-  return <aside role="status" className="rounded-xl border border-amber-400/40 p-3 text-sm text-amber-100">
+  return <aside role="status" className="rounded-xl border border-purple-400/40 p-3 text-sm text-purple-100">
     {policy ? <>
       <p>{policy.rechargeMode === 'sandbox'
         ? (ar ? 'اختبار محلي فقط — لا يتم خصم أموال حقيقية.' : 'Local sandbox only — no real money is charged.')

@@ -1,0 +1,47 @@
+import { chromium } from '@playwright/test';
+import assert from 'node:assert/strict';
+const origin = process.env.CARD8_ORIGIN || 'http://127.0.0.1:4350';
+if (!/^http:\/\/(localhost|127\.0\.0\.1):\d+$/.test(origin)) throw new Error('Local test only');
+const browser = await chromium.launch({ channel: 'chrome', headless: true });
+try {
+  const page = await browser.newPage({ viewport: { width: 390, height: 844 } });
+  page.setDefaultTimeout(10000);
+  await page.goto(origin);
+  await page.evaluate(() => localStorage.setItem('le3eb_locale', 'en'));
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.locator('nav button').last().click();
+  await page.getByRole('button', { name: 'Login / Sign up', exact: true }).click();
+  await page.locator('input[type="email"]').fill('buyer1@local.le3eb.invalid');
+  await page.locator('input[type="password"]').fill('Local-Only-Le3eb-2026!');
+  await page.getByRole('button', { name: 'Login', exact: true }).click();
+  await page.getByText('[LOCAL] Buyer 1', { exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Settings', exact: true }).click();
+  await page.getByRole('button', { name: 'Edit Profile', exact: true }).click();
+  const profileInput = page.locator('[data-view="SETTINGS_EDIT_PROFILE"] input[type="text"]').first();
+  const profileName = await profileInput.inputValue();
+  console.log('PROFILE_DRAFT ' + JSON.stringify({ expected: '[LOCAL] Buyer 1', actual: profileName }));
+  let releaseResponse, signalHeld, signalDone;
+  const gate = new Promise(resolve => { releaseResponse = resolve; });
+  const held = new Promise(resolve => { signalHeld = resolve; });
+  const done = new Promise(resolve => { signalDone = resolve; });
+  await page.route('**/api/uploads/commit', async route => {
+    const response = await route.fetch();
+    assert.ok(response.ok());
+    signalHeld(); await gate;
+    await route.fulfill({ response }); signalDone();
+  });
+  await page.getByLabel('Upload avatar', { exact: true }).setInputFiles('client/public/game-pubg.jpg');
+  await held;
+  await page.locator('[data-view="SETTINGS_EDIT_PROFILE"] button').first().click();
+  await page.getByRole('button', { name: 'Confirm', exact: true }).click({ timeout: 1200 }).catch(() => {});
+  await page.getByRole('button', { name: 'Logout Account', exact: true }).click();
+  await page.getByText('Search', { exact: true }).first().waitFor();
+  releaseResponse(); await done; await page.waitForTimeout(400);
+  await page.locator('nav button').last().click();
+  await page.getByRole('button', { name: 'Login / Sign up', exact: true }).waitFor();
+  const oldIdentity = await page.getByText('[LOCAL] Buyer 1', { exact: true }).count();
+  assert.equal(oldIdentity, 0, 'late real upload response must not restore logged-out identity');
+  assert.equal(profileName, '[LOCAL] Buyer 1', 'profile draft must initialize from authenticated account, not Guest');
+  assert.equal(await page.evaluate(() => localStorage.getItem('business_workbench_token')), null);
+  console.log('PASS delayed live avatar response ignored after logout; authenticated profile draft correct; token remains cleared.');
+} finally { await browser.close(); }

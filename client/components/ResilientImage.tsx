@@ -12,8 +12,7 @@ type Props = Omit<React.ImgHTMLAttributes<HTMLImageElement>, 'src' | 'srcSet' | 
 
 export function ResilientImage({ src, kind = 'cover', alt = '', ...props }: Props) {
   const [failed, setFailed] = useState<string | null>(null);
-  const usable = src && !/(?:picsum\.photos|example\.com|images\.unsplash\.com)(?:[/:?#]|$)/i.test(src) &&
-    (/^\/(?![\/\\])/.test(src) || /^https:\/\//i.test(src));
+  const usable = src && (/^\/(?![\/\\])/.test(src) || /^https:\/\//i.test(src));
   const effective = usable && failed !== src ? src : fallbacks[kind];
   return <img {...props} alt={alt} src={effective} referrerPolicy="no-referrer"
     onError={() => { if (effective !== fallbacks[kind]) setFailed(effective); }} />;

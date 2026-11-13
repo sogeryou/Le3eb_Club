@@ -9,7 +9,7 @@ export function safeAvatar(url: string | null) {
   if (url?.startsWith('/') && !url.startsWith('//') && !url.includes('\\')) return url;
   try {
     const parsed = new URL(url ?? '');
-    if (parsed.protocol === 'https:' && !/(^|\.)(picsum\.photos|example\.com)$/i.test(parsed.hostname)) return parsed.href;
+    if (parsed.protocol === 'https:') return parsed.href;
   } catch { /* use the local avatar */ }
   return defaultAvatar;
 }

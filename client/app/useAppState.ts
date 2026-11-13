@@ -14,6 +14,33 @@ import { viewRequiresAuth } from '../router/guards';
 import { useUiStore } from '../stores/uiStore';
 import { resolveOrderContext } from '../lib/resolveOrderContext';
 
+function createEmptyApplicationDraft() {
+  return {
+    gameId: '',
+    rank: '',
+    mainPosition: '',
+    server: '',
+    platform: '',
+    style: '',
+    intro: '',
+    screenshots: [] as string[],
+    voiceUrl: '',
+    coverUrl: '',
+    coverIntro: '',
+    serviceName: '',
+    price: 0,
+    unit: 'Game',
+    promotion: {
+      type: 'NONE' as 'NONE' | 'FIRST_ORDER_DISCOUNT' | 'DISCOUNT' | 'BUY_X_GET_Y',
+      value: 0,
+      buyX: 0,
+      getY: 0,
+      limitType: 'NONE' as 'NONE' | 'TIME' | 'QUANTITY',
+      limitValue: 0
+    }
+  };
+}
+
 export function useAppState() {
   const [GAMES, setGames] = useState<Game[]>(BASE_GAMES);
   const deviceId = useDeviceId();
@@ -26,7 +53,7 @@ export function useAppState() {
   const [isRecording, setIsRecording] = useState(false);
   const [recordingTime, setRecordingTime] = useState(0);
   const [pushNotificationsEnabled, setPushNotificationsEnabled] = useState(true);
-  const [cacheSize, setCacheSize] = useState('12.4 MB');
+  const [cacheSize, setCacheSize] = useState('—');
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const isAuthenticatedRef = useRef(false);
   const [authToken, setAuthToken] = useState<string | null>(null);
@@ -61,7 +88,7 @@ export function useAppState() {
     }
     try {
       const data = await businessApi.getWalletBalance(token);
-      setWallet(data);
+      if (authTokenRef.current === token) setWallet(data);
     } catch (err) {
       console.error('Failed to fetch wallet:', err);
     }
@@ -75,7 +102,7 @@ export function useAppState() {
     }
     try {
       const data = await businessApi.listWalletTransactions(token);
-      setTransactions(data);
+      if (authTokenRef.current === token) setTransactions(data);
     } catch (err) {
       console.error('Failed to fetch transactions:', err);
     }
@@ -230,6 +257,23 @@ export function useAppState() {
     setAuthToken(null);
     authTokenRef.current = null;
     setAuthUser(null);
+    setIsRecharging(false);
+    setWallet(null);
+    setTransactions([]);
+    setSelectedOrder(null);
+    setChatTarget(null);
+    setCurrentMessages([]);
+    setChatSessions([]);
+    setImOrders([]);
+    setMessageInput('');
+    setShowOrderDetailModal(false);
+    setShowReviewModal(false);
+    setShowOngoingOrderWarning(false);
+    setWithdrawAmount('');
+    setWithdrawAddress('');
+    setApplicationDetails({ rank: '', platform: '', style: '', price: '', discount: '' });
+    setPlayerApplicationData(createEmptyApplicationDraft());
+    setPlayerApplicationStep(1);
     adminLoginIntentRef.current = false;
     pendingNavigationRef.current = null;
     setCurrentView('HOME');
@@ -335,32 +379,38 @@ export function useAppState() {
       return;
     }
     setIsRecharging(true);
+    const stillCurrent = () => authTokenRef.current === token;
     try {
       const policy = await businessApi.getMoneyPolicy();
+      if (!stillCurrent()) return;
       if (policy.rechargeMode !== 'sandbox') throw new Error('Real recharge is not available.');
       // 1. Create Order
       const order = await businessApi.createRechargeOrder(token, pkg.id, method, pkg.moneyPolicy?.policyId);
+      if (!stillCurrent()) return;
 
       // Explicit development sandbox only; never represents a native store payment.
       await new Promise(resolve => setTimeout(resolve, 2000));
+      if (!stillCurrent()) return;
       const transactionId = `pay_${Math.random().toString(36).substr(2, 9)}`;
 
       // 3. Verify Payment (Callback)
       const result = await businessApi.verifyRecharge(token, order.id, transactionId, 'SUCCESS');
+      if (!stillCurrent()) return;
 
       if (result.status === 'SUCCESS') {
         await fetchWallet();
         await fetchTransactions();
-        navigateTo('WALLET');
+        if (stillCurrent()) navigateTo('WALLET');
       } else if (result.status === 'PENDING') {
         notify('Payment is being reviewed for risk control. Please check back later.');
         navigateTo('WALLET');
       }
     } catch (err: any) {
+      if (!stillCurrent()) return;
       await fetchPackages();
       notify(err.message || 'Recharge failed');
     } finally {
-      setIsRecharging(false);
+      if (stillCurrent()) setIsRecharging(false);
     }
   };
   const [selectedCategory, setSelectedCategory] = useState<Category>('GAMES');
@@ -380,7 +430,7 @@ export function useAppState() {
   const [selectedGiftId, setSelectedGiftId] = useState<number | null>(0);
   const [giftQuantity, setGiftQuantity] = useState(1);
   const [showQuantitySelector, setShowQuantitySelector] = useState(false);
-  const [userCoins, setUserCoins] = useState(1250);
+  const [userCoins, setUserCoins] = useState(0);
   const [userDiamonds, setUserDiamonds] = useState(0);
   const [withdrawAmount, setWithdrawAmount] = useState('');
   const [withdrawAddress, setWithdrawAddress] = useState('');
@@ -415,30 +465,7 @@ export function useAppState() {
     return () => { active = false; };
   }, [authToken, authUser?.role, currentView, companionStatusRefresh, recordCompanionApplication]);
   const [playerApplicationStep, setPlayerApplicationStep] = useState(1);
-  const [playerApplicationData, setPlayerApplicationData] = useState({
-    gameId: '',
-    rank: '',
-    mainPosition: '',
-    server: '',
-    platform: '',
-    style: '',
-    intro: '',
-    screenshots: [] as string[],
-    voiceUrl: '',
-    coverUrl: '',
-    coverIntro: '',
-    serviceName: '',
-    price: 0,
-    unit: 'Game',
-    promotion: {
-      type: 'NONE' as 'NONE' | 'FIRST_ORDER_DISCOUNT' | 'DISCOUNT' | 'BUY_X_GET_Y',
-      value: 0,
-      buyX: 0,
-      getY: 0,
-      limitType: 'NONE' as 'NONE' | 'TIME' | 'QUANTITY',
-      limitValue: 0
-    }
-  });
+  const [playerApplicationData, setPlayerApplicationData] = useState(createEmptyApplicationDraft);
   const [applyGameSearchQuery, setApplyGameSearchQuery] = useState('');
   const [showApplySelectionModal, setShowApplySelectionModal] = useState<{
     show: boolean;
@@ -530,10 +557,7 @@ export function useAppState() {
   const [activeServiceId, setActiveServiceId] = useState<string | null>(null);
   const [selectedVariant, setSelectedVariant] = useState<EPalServiceVariant | null>(null);
   const [orderQuantity, setOrderQuantity] = useState(1);
-  const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([
-    { id: '1', name: 'New User Discount', discount: 5, type: 'FIXED', minSpend: 10 },
-    { id: '2', name: 'Weekend Special', discount: 10, type: 'PERCENTAGE', minSpend: 20 }
-  ]);
+  const [availableCoupons, setAvailableCoupons] = useState<Coupon[]>([]);
   const [selectedCoupon, setSelectedCoupon] = useState<Coupon | null>(null);
   const [showCouponModal, setShowCouponModal] = useState(false);
   const [showServiceTypeModal, setShowServiceTypeModal] = useState(false);
@@ -609,7 +633,7 @@ export function useAppState() {
   const [isScrolling, setIsScrolling] = useState(false);
   const [copied, setCopied] = useState(false);
   const [followedEPals, setFollowedEPals] = useState<Set<string>>(new Set());
-  const followersOfMe = useMemo(() => new Set(['1', '2', '3', '5']), []); // Mock users who follow me
+  const followersOfMe = useMemo(() => new Set<string>(), []);
   const mutualFollowers = useMemo(() => {
     return EPALS.filter(epal => followedEPals.has(epal.id) && followersOfMe.has(epal.id));
   }, [EPALS, followedEPals, followersOfMe]);
@@ -632,37 +656,17 @@ export function useAppState() {
     }
   }, [communityTab, selectedGame, followedEPals]);
 
-  const toggleFollow = (id: string) => {
+  const toggleFollow = (_id: string) => {
     if (!requireAuthAction(t('auth.loginRequiredFeature'))) {
       return;
     }
-    if (followedEPals.has(id)) {
-      // Show confirmation modal
-      const epal = EPALS.find(e => e.id === id);
-      if (epal) {
-        setEpalToUnfollow(epal);
-        setShowUnfollowModal(true);
-      }
-      return;
-    }
-
-    setFollowedEPals(prev => {
-      const next = new Set(prev);
-      next.add(id);
-      return next;
-    });
+    notify('Following is not available yet.');
   };
 
   const confirmUnfollow = () => {
-    if (epalToUnfollow) {
-      setFollowedEPals(prev => {
-        const next = new Set(prev);
-        next.delete(epalToUnfollow.id);
-        return next;
-      });
-      setShowUnfollowModal(false);
-      setEpalToUnfollow(null);
-    }
+    setShowUnfollowModal(false);
+    setEpalToUnfollow(null);
+    notify('Following is not available yet.');
   };
 
   const copyToClipboard = (text: string) => {
