@@ -2,6 +2,8 @@ import { z } from 'zod';
 
 const RawEnvSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  STAGING_MODE: z.enum(['true', 'false']).default('false'),
+  STAGING_ACCESS_PASSWORD: z.string().optional(),
   PORT: z.coerce.number().default(3000),
   DATABASE_URL: z.string().optional(),
   REDIS_URL: z.string().optional(),
@@ -35,16 +37,20 @@ export function loadEnv(): AppEnv {
   if (cached) return cached;
   const parsed = RawEnvSchema.safeParse(process.env);
   if (!parsed.success) throw new Error(parsed.error.message);
-  cached = parsed.data;
-  if (cached.NODE_ENV === 'production') {
+  const env = parsed.data;
+  if (env.NODE_ENV === 'production') {
     const missing: string[] = [];
-    if (!cached.JWT_SECRET || cached.JWT_SECRET.length < 64) missing.push('JWT_SECRET');
-    if (!cached.ADMIN_EMAIL) missing.push('ADMIN_EMAIL');
-    if (!cached.ADMIN_PASSWORD) missing.push('ADMIN_PASSWORD');
-    if (cached.ALLOW_DEMO_SEED === 'true') missing.push('ALLOW_DEMO_SEED=false');
+    if (!env.JWT_SECRET || env.JWT_SECRET.length < 64) missing.push('JWT_SECRET');
+    if (!env.ADMIN_EMAIL) missing.push('ADMIN_EMAIL');
+    if (!env.ADMIN_PASSWORD) missing.push('ADMIN_PASSWORD');
+    if (env.ALLOW_DEMO_SEED === 'true') missing.push('ALLOW_DEMO_SEED=false');
     if (missing.length) throw new Error(`Missing production env: ${missing.join(', ')}`);
   }
-  return cached;
+  if (env.STAGING_MODE === 'true' && (env.NODE_ENV !== 'production' || !env.STAGING_ACCESS_PASSWORD || env.STAGING_ACCESS_PASSWORD.length < 24 || !env.REDIS_URL || env.ALLOW_DEMO_SEED !== 'false' || env.PAYMENT_PROVIDER !== 'sandbox' || env.SETTLEMENT_CRON_DISABLED !== 'true' || env.STORAGE_BACKEND !== 'json')) {
+    throw new Error('Private staging requires production mode, staging password, isolated Redis/JSON, demo seed off, payments sandbox, settlement off');
+  }
+  cached = env;
+  return env;
 }
 
 export function resolveJwtSecret(env: AppEnv): string {

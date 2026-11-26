@@ -42,6 +42,16 @@ function codeKey(email: string, purpose: EmailCodePurpose) {
 export class InMemoryVerificationCodeStore implements VerificationCodeStore {
   private records = new Map<string, VerificationCodeRecord>();
 
+  redeem(email: string, purpose: EmailCodePurpose, code: string) {
+    this.pruneExpired();
+    const record = this.records.get(codeKey(email, purpose));
+    if (!record || record.attempts >= EMAIL_CODE_MAX_ATTEMPTS) return false;
+    record.attempts += 1;
+    if (!verifyEmailCode(code, record.codeHash)) return false;
+    this.records.delete(codeKey(email, purpose));
+    return true;
+  }
+
   async create(input: CreateVerificationCodeInput): Promise<VerificationCodeRecord> {
     this.pruneExpired();
     const email = normalizeAuthEmail(input.email);
@@ -96,6 +106,9 @@ export class InMemoryAuthRateLimiter implements AuthRateLimiter {
   async checkEmailCodeSend(input: SendEmailCodeInput) {
     const key = codeKey(input.email, input.purpose);
     const now = Date.now();
+    for (const [id, sentAt] of this.sentAtByEmail) {
+      if (now - sentAt >= EMAIL_CODE_COOLDOWN_SEC * 1000) this.sentAtByEmail.delete(id);
+    }
     const lastSentAt = this.sentAtByEmail.get(key) || 0;
     const retryAfterMs = lastSentAt + EMAIL_CODE_COOLDOWN_SEC * 1000 - now;
     if (retryAfterMs > 0) {
@@ -129,3 +142,22 @@ export class ConsoleMailSender implements MailSender {
 export const localVerificationCodeStore = new InMemoryVerificationCodeStore();
 export const localAuthRateLimiter = new InMemoryAuthRateLimiter();
 export const localMailSender = new ConsoleMailSender();
+
+export async function deliverEmailCode(input: Parameters<MailSender['sendEmailCode']>[0]) {
+  const key = process.env.RESEND_API_KEY;
+  const from = process.env.AUTH_EMAIL_FROM;
+  if (!key || !from) {
+    if (process.env.NODE_ENV === 'production') throw new Error('Mail provider is not configured');
+    return localMailSender.sendEmailCode(input);
+  }
+  const response = await fetch('https://api.resend.com/emails', {
+    method: 'POST',
+    headers: { Authorization: 'Bearer ' + key, 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      from, to: [input.to], subject: 'Laeeb verification code',
+      text: `Laeeb code / رمز التحقق: ${input.code}\nExpires in 5 minutes. / تنتهي صلاحيته بعد ٥ دقائق.`,
+    }),
+    signal: AbortSignal.timeout(8000),
+  });
+  if (!response.ok) throw new Error('Could not send verification email');
+}

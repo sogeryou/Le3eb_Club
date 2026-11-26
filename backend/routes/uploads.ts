@@ -9,7 +9,20 @@ import { AVATAR_MAX_BYTES, avatarKey, imageMime, isAvatarMime, isOwnedAvatarKey,
 
 const avatarDirectory = fileURLToPath(new URL('../data/avatars/', import.meta.url));
 const localAvatarUrl = (key: string) => '/api/uploads/avatar/' + key.split('/').map(encodeURIComponent).join('/');
-const localEnabled = () => loadEnv().NODE_ENV !== 'production' && resolveObjectStore() instanceof DevObjectStore;
+const localEnabled = () => (loadEnv().NODE_ENV !== 'production' || loadEnv().STAGING_MODE === 'true') && resolveObjectStore() instanceof DevObjectStore;
+
+export async function storeRegistrationAvatar(owner: string, bytes: Buffer) {
+  const mime = imageMime(bytes);
+  if (!mime || bytes.length > AVATAR_MAX_BYTES) throw new Error('Invalid avatar');
+  const key = avatarKey(owner, mime);
+  const store = resolveObjectStore();
+  if (store instanceof S3ObjectStore) return store.storeRegistrationAvatar(key, bytes, mime);
+  if (!localEnabled()) throw new Error('Avatar storage is not configured');
+  const target = path.join(avatarDirectory, key);
+  await mkdir(path.dirname(target), { recursive: true });
+  await writeFile(target, bytes, { flag: 'wx' });
+  return localAvatarUrl(key);
+}
 
 export function registerUploadRoutes(app: express.Application, ctx: AppContext) {
   app.post('/api/uploads/signed', ctx.authMiddleware, async (req, res) => {

@@ -76,6 +76,8 @@ export type PersistedState = {
     gender?: 'M' | 'F' | 'U';
     phone?: string;
     country?: string;
+    birthDate?: string;
+    googleSubject?: string;
     emailVerifiedAt?: number;
     lastLoginAt?: number;
     accountStatus?: AccountStatus;

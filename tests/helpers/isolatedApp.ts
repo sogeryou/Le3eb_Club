@@ -20,7 +20,8 @@ export async function isolatedApp(options: { seeded?: boolean; demoFlag?: 'unset
   const env: NodeJS.ProcessEnv = { ...process.env, NODE_ENV: 'test', STORAGE_BACKEND: 'json', PAYMENT_PROVIDER: 'sandbox', SETTLEMENT_CRON_DISABLED: 'true', DISABLE_HMR: 'true',
     JWT_SECRET: 'local-card7-only-secret-for-disposable-tests-2026' };
   for (const key of ['DATABASE_URL', 'REDIS_URL', 'ADMIN_EMAIL', 'ADMIN_PASSWORD', 'S3_BUCKET', 'S3_ACCESS_KEY_ID',
-    'S3_SECRET_ACCESS_KEY', 'MONEY_POLICY_JSON', 'ALLOW_DEMO_SEED']) delete env[key];
+    'S3_SECRET_ACCESS_KEY', 'MONEY_POLICY_JSON', 'ALLOW_DEMO_SEED', 'GOOGLE_AUTH_CLIENT_ID',
+    'RESEND_API_KEY', 'AUTH_EMAIL_FROM', 'LOG_LEVEL']) delete env[key];
   if (options.demoFlag !== 'unset') env.ALLOW_DEMO_SEED = 'false';
   if (options.seeded !== false) {
     const result = spawnSync(process.execPath, ['--import', 'tsx', 'scripts/seed-local.ts', '--confirm-local'], {

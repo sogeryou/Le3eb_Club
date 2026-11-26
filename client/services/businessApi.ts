@@ -20,6 +20,11 @@ export interface AuthSession {
   user: AuthUser;
 }
 
+export type WelcomeResult =
+  | { kind: 'session'; session: AuthSession }
+  | { kind: 'profile' | 'confirm-google'; ticket: string; email: string };
+export type RegistrationProfile = { username: string; gender: 'M' | 'F'; country: string; birthDate: string };
+
 export interface CompanionProfile {
   id: string;
   userId: string;
@@ -116,6 +121,25 @@ async function request<T>(path: string, method: HttpMethod, body?: unknown, toke
 }
 
 export const businessApi = {
+  confirmWelcomeEmail(email: string, code: string, deviceId?: string, googleTicket?: string) {
+    return request<WelcomeResult>('/api/auth/welcome/email', 'POST', { email, code, deviceId, googleTicket });
+  },
+  startGoogleAuth() {
+    return request<{ clientId: string; nonce: string }>('/api/auth/welcome/google/start', 'POST', {});
+  },
+  confirmGoogleAuth(credential: string, nonce: string, deviceId?: string) {
+    return request<WelcomeResult>('/api/auth/welcome/google', 'POST', { credential, nonce, deviceId });
+  },
+  async uploadRegistrationAvatar(ticket: string, file: File) {
+    const response = await fetch(apiUrl('/api/auth/welcome/avatar'), {
+      method: 'POST', headers: { 'Content-Type': file.type, Authorization: 'Bearer ' + ticket }, body: file,
+    });
+    if (response.status === 413 || response.status === 415) throw new Error('AUTH_AVATAR_INVALID');
+    if (!response.ok) await readJsonResponse<never>(response);
+  },
+  completeWelcomeRegistration(ticket: string, profile: RegistrationProfile, useDefaultAvatar: boolean, deviceId?: string) {
+    return request<AuthSession>('/api/auth/welcome/complete', 'POST', { ...profile, genderConfirmed: true, useDefaultAvatar, deviceId }, ticket);
+  },
   getDashboard(token: string) {
     return request<BusinessDashboard>('/api/dashboard/business', 'GET', undefined, token);
   },

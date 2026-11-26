@@ -1,23 +1,22 @@
 import type express from 'express';
 import { EmailCodeLoginBodySchema, EmailCodeSendBodySchema, LoginBodySchema, RegisterBodySchema } from '../../shared/schemas.js';
 import { hashPassword as hashPasswordArgon, verifyPassword as verifyPasswordArgon } from '../auth/password.js';
-import { issueRefreshToken, revokeRefreshToken, rotateRefreshToken, signAccessToken } from '../auth/tokens.js';
+import { issueRefreshToken, revokeAccessToken, revokeRefreshToken, rotateRefreshToken, signAccessToken, verifyAccessToken } from '../auth/tokens.js';
 import {
   EMAIL_CODE_COOLDOWN_SEC,
-  EMAIL_CODE_MAX_ATTEMPTS,
   EMAIL_CODE_TTL_SEC,
   generateEmailCode,
   hashEmailCode,
   localAuthRateLimiter,
-  localMailSender,
+  deliverEmailCode,
   localVerificationCodeStore,
   normalizeAuthEmail,
-  verifyEmailCode,
 } from '../auth/emailCode.js';
 import { zValidate } from '../middleware/validate.js';
 import { normalizeUserPassword } from '../state/jsonState.js';
 import type { AppContext } from '../app/context.js';
 import { isDeviceBanned } from './ops.js';
+import { registerWelcomeAuth } from './welcomeAuth.js';
 
 export function registerAuthRoutes(app: express.Application, ctx: AppContext) {
   const getAuthMeta = (req: express.Request, deviceId?: string) => ({
@@ -40,7 +39,12 @@ export function registerAuthRoutes(app: express.Application, ctx: AppContext) {
     };
   };
 
+  registerWelcomeAuth(app, ctx, issueSessionForUser);
+
   app.post('/api/auth/register', zValidate(RegisterBodySchema), async (req, res) => {
+    if (process.env.NODE_ENV === 'production') {
+      return ctx.sendError(res, 410, 'AUTH_USE_WELCOME', 'Register from the welcome screen');
+    }
     const body = (req as express.Request & { validatedBody: { username: string; email: string; password: string; deviceId?: string } }).validatedBody;
     const email = normalizeAuthEmail(body.email);
     if (isDeviceBanned(ctx.deviceBans, body.deviceId)) {
@@ -112,19 +116,19 @@ export function registerAuthRoutes(app: express.Application, ctx: AppContext) {
       });
     }
     const code = generateEmailCode();
-    await localVerificationCodeStore.create({
+    const record = await localVerificationCodeStore.create({
       email,
       purpose: body.purpose,
       codeHash: hashEmailCode(code),
       ttlSec: EMAIL_CODE_TTL_SEC,
       meta: getAuthMeta(req, body.deviceId),
     });
-    await localMailSender.sendEmailCode({
-      to: email,
-      code,
-      purpose: body.purpose,
-      expiresInSec: EMAIL_CODE_TTL_SEC,
-    });
+    try {
+      await deliverEmailCode({ to: email, code, purpose: body.purpose, expiresInSec: EMAIL_CODE_TTL_SEC });
+    } catch {
+      await localVerificationCodeStore.consume(record.id, Date.now());
+      return ctx.sendError(res, 503, 'AUTH_MAIL_UNAVAILABLE', 'Verification email is unavailable');
+    }
     res.json({
       ok: true,
       purpose: body.purpose,
@@ -150,17 +154,17 @@ export function registerAuthRoutes(app: express.Application, ctx: AppContext) {
       });
     }
 
-    const record = await localVerificationCodeStore.findActive(email, 'login');
-    if (!record || record.attempts >= EMAIL_CODE_MAX_ATTEMPTS) {
-      return ctx.sendError(res, 401, 'AUTH_EMAIL_CODE_INVALID', 'Invalid or expired verification code');
-    }
-    const attempted = await localVerificationCodeStore.recordAttempt(record.id);
-    if (!attempted || attempted.attempts > EMAIL_CODE_MAX_ATTEMPTS || !verifyEmailCode(body.code, attempted.codeHash)) {
-      return ctx.sendError(res, 401, 'AUTH_EMAIL_CODE_INVALID', 'Invalid or expired verification code');
-    }
-    await localVerificationCodeStore.consume(attempted.id, Date.now());
-
     let user = ctx.users.find(u => normalizeAuthEmail(u.email) === email);
+    if (user?.role === 'ADMIN' || user?.accountStatus === 'FROZEN') {
+      return ctx.sendError(res, 403, 'AUTH_ACCOUNT_UNAVAILABLE', 'Account unavailable');
+    }
+    if (!user && process.env.NODE_ENV === 'production') {
+      return ctx.sendError(res, 410, 'AUTH_USE_WELCOME', 'Register from the welcome screen');
+    }
+    if (!localVerificationCodeStore.redeem(email, 'login', body.code)) {
+      return ctx.sendError(res, 401, 'AUTH_EMAIL_CODE_INVALID', 'Invalid or expired verification code');
+    }
+
     const now = Date.now();
     if (!user) {
       const username = body.username?.trim() || `user_${Math.random().toString(36).slice(2, 8)}`;
@@ -202,6 +206,8 @@ export function registerAuthRoutes(app: express.Application, ctx: AppContext) {
   app.post('/api/auth/logout', ctx.authMiddleware, async (req, res) => {
     const raw = req.headers.authorization || '';
     const token = raw.startsWith('Bearer ') ? raw.slice(7) : '';
+    const access = token.includes('.') ? await verifyAccessToken(token) : null;
+    if (access) await revokeAccessToken(access.jti);
     if (token && ctx.sessions[token]) {
       delete ctx.sessions[token];
       ctx.persistState();

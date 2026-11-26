@@ -45,7 +45,7 @@ export function ImView() {
       {rows.map(row => <button className="flex w-full gap-4 items-center text-start hover:bg-white/5 transition-all p-2 -mx-2 rounded-xl" key={row.id} onClick={() => navigateTo('IM_DETAIL', { conversationId: row.id })}>
         <ResilientImage kind="avatar" src={row.peer.avatarUrl} className="w-14 h-14 rounded-full object-cover border border-white/10" />
         <span className="min-w-0 flex-1">
-          <strong><bdi>{row.peer.displayName}</bdi></strong>
+          <strong className="laeeb-nickname block truncate"><bdi>{row.peer.displayName}</bdi></strong>
           <span className="block truncate text-gray-300" dir="auto">{row.lastMessage?.content ?? (ar ? 'محادثة جديدة' : 'New conversation')}</span>
         </span>
         {!!row.unreadCount && <span className="w-5 h-5 rounded-full bg-purple-600 text-center text-xs font-bold text-white">{row.unreadCount}</span>}

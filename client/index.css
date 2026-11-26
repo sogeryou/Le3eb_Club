@@ -1,6 +1,23 @@
 @import "tailwindcss";
 @source "../admin";
 
+@font-face {
+  font-family: 'Laeeb Nickname Arabic';
+  src: url('/nickname-amiri.ttf') format('truetype');
+  font-display: swap;
+  unicode-range: U+FB50-FDFF, U+FE70-FEFC, U+1EE00-1EEFF;
+}
+@font-face {
+  font-family: 'Laeeb Nickname Latin';
+  src: url('/nickname-noto-math.ttf') format('truetype');
+  font-display: swap;
+  unicode-range: U+2100-214F, U+1D400-1D7FF;
+}
+
+.laeeb-nickname {
+  font-family: 'Laeeb Nickname Arabic', 'Laeeb Nickname Latin', 'Laeeb Cairo', system-ui, sans-serif;
+}
+
 @layer utilities {
   .no-scrollbar::-webkit-scrollbar {
     display: none;

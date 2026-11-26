@@ -13,6 +13,7 @@ import {
   WalletTransaction
 } from '../shared/types.js';
 import { loadEnv } from './config/env.js';
+import { stagingAccess, verifyStagingAccess } from './middleware/stagingAccess.js';
 import { logger } from './logging/logger.js';
 import { assertRateInLevelBand, validateLevelingConfig } from './policy/index.js';
 import { levelFromHourlyRate } from './policy/leveling.js';
@@ -67,10 +68,26 @@ async function startServer() {
   const PORT = env.PORT;
   let shuttingDown = false;
   app.set('trust proxy', 1);
-  app.use(helmet({ contentSecurityPolicy: env.NODE_ENV === 'production' }));
+  const googleEnabled = Boolean(process.env.GOOGLE_AUTH_CLIENT_ID);
+  const avatarOrigin = URL.canParse(env.S3_PUBLIC_BASE_URL ?? '') ? new URL(env.S3_PUBLIC_BASE_URL!) : null;
+  app.use(helmet({
+    contentSecurityPolicy: env.NODE_ENV !== 'production' ? false : {
+      directives: {
+        imgSrc: ["'self'", 'data:', 'blob:', ...(avatarOrigin?.protocol === 'https:' ? [avatarOrigin.origin] : [])],
+        ...(googleEnabled ? {
+          scriptSrc: ["'self'", 'https://accounts.google.com/gsi/client'],
+          frameSrc: ['https://accounts.google.com/gsi/'],
+          connectSrc: ["'self'", 'https://accounts.google.com/gsi/'],
+          styleSrc: ["'self'", "'unsafe-inline'", 'https://accounts.google.com/gsi/style'],
+        } : {}),
+      },
+    },
+    crossOriginOpenerPolicy: googleEnabled ? { policy: 'same-origin-allow-popups' } : undefined,
+  }));
   const allowlist = (process.env.CORS_ALLOWLIST || 'http://localhost:3000,http://localhost:5173').split(',').map(s => s.trim());
   app.use(cors({ origin: allowlist, credentials: true }));
   app.use(rateLimit({ windowMs: 60_000, max: 600, skip: req => ['/healthz', '/ready', '/metrics'].includes(req.path) }));
+  if (env.STAGING_MODE === 'true') app.use(stagingAccess(env.STAGING_ACCESS_PASSWORD!));
   app.use(metricsMiddleware());
   app.use(express.json({ limit: '1mb' }));
   app.get('/healthz', (_req, res) => res.json({ ok: true, t: Date.now() }));
@@ -991,6 +1008,9 @@ async function startServer() {
     if (!u) return sendError(res, 404, 'ADMIN_USER_NOT_FOUND', 'User not found');
     if (u.role === 'ADMIN') return sendError(res, 400, 'ADMIN_PROFILE_EDIT_FORBIDDEN', 'Cannot edit admin profile here');
     const { username, gender, phone, country } = req.body || {};
+    if (u.birthDate && gender !== undefined && gender !== u.gender) {
+      return sendError(res, 409, 'USER_GENDER_LOCKED', 'Confirmed gender cannot be changed');
+    }
     if (typeof username === 'string' && username.trim()) {
       if (users.some(x => x.id !== u.id && x.username === username.trim())) {
         return sendError(res, 409, 'ADMIN_USERNAME_TAKEN', 'Username taken');
@@ -1231,6 +1251,11 @@ async function startServer() {
 
   const server = app.listen(PORT, '0.0.0.0', () => {
     logger.info({ port: PORT }, 'server_started');
+    if (env.STAGING_MODE === 'true') {
+      void verifyStagingAccess(`http://127.0.0.1:${PORT}`, env.STAGING_ACCESS_PASSWORD!)
+        .then(() => logger.info('staging_access_verified: private homepage and readiness protected; authenticated session and Redis operational'))
+        .catch(() => { logger.error('staging_access_verification_failed'); process.exit(1); });
+    }
   });
 
   const gracefulShutdown = (signal: string) => {

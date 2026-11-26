@@ -138,10 +138,11 @@ export function useAppState() {
     let cancelled = false;
     const restoreSession = async () => {
       const uiAuth = sessionStorage.getItem(BUSINESS_UI_AUTH_KEY) === '1';
-      const token = uiAuth ? localStorage.getItem(BUSINESS_TOKEN_KEY) : null;
+      const onAdmin = window.location.pathname.startsWith('/admin');
+      const token = uiAuth || !onAdmin ? localStorage.getItem(BUSINESS_TOKEN_KEY) : null;
       if (cancelled) return;
-      setIsAuthenticated(Boolean(uiAuth && token));
-      isAuthenticatedRef.current = Boolean(uiAuth && token);
+      setIsAuthenticated(Boolean(token));
+      isAuthenticatedRef.current = Boolean(token);
       setAuthToken(token);
       authTokenRef.current = token;
       if (token) {
@@ -317,10 +318,34 @@ export function useAppState() {
     if (pending) {
       navigateTo(pending.view, pending.data);
     } else {
-      setCurrentView('ME');
-      setViewHistory(['ME']);
+      setCurrentView('HOME');
+      setViewHistory(['HOME']);
     }
   };
+
+  const enterFromWelcome = (session: Awaited<ReturnType<typeof businessApi.login>>) => {
+    pendingNavigationRef.current = null;
+    finishAuthSession(session, false);
+  };
+
+  useEffect(() => {
+    if (!authToken) return;
+    let expiresAt: number;
+    try {
+      const payload = authToken.split('.')[1]?.replace(/-/g, '+').replace(/_/g, '/');
+      expiresAt = JSON.parse(atob(payload)).exp * 1000;
+      if (!Number.isFinite(expiresAt)) return;
+    } catch { return; }
+    const expire = () => {
+      if (Date.now() >= expiresAt && authTokenRef.current === authToken) void handleLogout();
+    };
+    const timeout = window.setTimeout(expire, Math.max(0, expiresAt - Date.now()));
+    window.addEventListener('focus', expire);
+    return () => {
+      window.clearTimeout(timeout);
+      window.removeEventListener('focus', expire);
+    };
+  }, [authToken]);
 
   const handleSendAuthEmailCode = async () => {
     if (!authEmail.trim()) {
@@ -900,7 +925,7 @@ export function useAppState() {
     expandedRankingId, setExpandedRankingId, pendingNavigationRef, authTokenRef,
     fetchWallet, fetchTransactions, fetchPackages, fetchCompanionRankings, sortedRankings,
     openAuthModal, openAdminAuthModal, notify, requireAuthAction, handleLogout,
-    handleSendAuthEmailCode, handleAuthSubmit, handleRecharge,
+    handleSendAuthEmailCode, handleAuthSubmit, handleRecharge, enterFromWelcome,
     selectedCategory, setSelectedCategory, searchQuery, setSearchQuery, selectedGame, setSelectedGame,
     selectedServiceCategory, setSelectedServiceCategory, applicationDetails, setApplicationDetails,
     selectedEPal, setSelectedEPal, selectedPost, setSelectedPost, showGiftPanel, setShowGiftPanel,

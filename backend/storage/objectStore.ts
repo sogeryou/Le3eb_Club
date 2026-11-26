@@ -60,6 +60,15 @@ export class S3ObjectStore implements IObjectStore {
     if (!part.Body || imageMime(await part.Body.transformToByteArray()) !== head.ContentType) return null;
     return `${base.replace(/\/+$/, '')}/${key}`;
   }
+
+  async storeRegistrationAvatar(key: string, bytes: Buffer, mime: string) {
+    const base = loadEnv().S3_PUBLIC_BASE_URL;
+    if (!base || new URL(base).protocol !== 'https:') throw new Error('Avatar storage is not configured');
+    await this.client.send(new PutObjectCommand({
+      Bucket: this.bucket, Key: key, ContentType: mime, Body: bytes, IfNoneMatch: '*',
+    }));
+    return `${base.replace(/\/+$/, '')}/${key}`;
+  }
 }
 
 export class DevObjectStore implements IObjectStore {

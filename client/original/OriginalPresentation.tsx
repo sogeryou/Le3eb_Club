@@ -3674,7 +3674,7 @@ return (
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
-                      <h1 className="text-xl font-black text-white truncate">{userProfile.name}</h1>
+                      <h1 className="laeeb-nickname min-w-0 text-xl font-black text-white truncate"><bdi>{userProfile.name}</bdi></h1>
                       {!isAuthenticated && <button className="text-sm font-bold text-purple-400" onClick={() => openAuthModal()}>{selectedLanguage === 'Arabic' ? 'تسجيل الدخول / إنشاء حساب' : 'Login / Sign up'}</button>}
                     </div>
                     <div className="flex items-center gap-2 mt-1">

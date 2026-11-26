@@ -99,7 +99,7 @@ export function ImDetailView() {
       <button aria-label={ar ? 'رجوع' : 'Back'} className="p-2 hover:bg-white/5 rounded-full" onClick={handleBack}><ArrowLeft className="w-6 h-6 rtl:rotate-180"/></button>
       {conversation && <>
         <ResilientImage kind="avatar" src={conversation.peer.avatarUrl} className="size-10 rounded-full object-cover" />
-        <h1 className="font-bold flex-1"><bdi>{conversation.peer.displayName}</bdi></h1>
+        <h1 className="laeeb-nickname min-w-0 truncate font-bold flex-1"><bdi>{conversation.peer.displayName}</bdi></h1>
       </>}
     </header>
     {loadError && <p role="alert">{ar ? 'تعذر فتح المحادثة أو تحديثها.' : 'Could not open or refresh the conversation.'} <button className="underline" onClick={() => setRevision(n => n + 1)}>{ar ? 'إعادة المحاولة' : 'Retry'}</button></p>}
